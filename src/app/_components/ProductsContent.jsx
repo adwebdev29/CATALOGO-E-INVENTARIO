@@ -1,37 +1,45 @@
 "use client";
 import FilterButton from "./FilterButton";
 import ProductCard from "@/app/_components/ProductCard";
-import { act, useState } from "react";
+import { useState } from "react";
 import { filters } from "../_constants/filters";
-export default function ProductsContent({ productos }) {
+
+export default function ProductsContent({ productos = [] }) {
   const [activeFilters, setFilter] = useState({
     brand: null,
     cat: null,
     tipo: null,
   });
 
-  if (activeFilters.tipo == "all") {
-    setFilter({ brand: null, cat: null, tipo: null });
-  }
-  //
+  // ✅ Función controlada (aquí vive la lógica)
+  const handleSetFilter = (newFilter) => {
+    if (newFilter.tipo === "all") {
+      setFilter({ brand: null, cat: null, tipo: null });
+    } else {
+      setFilter((prev) => ({ ...prev, ...newFilter }));
+    }
+  };
+
+  // ✅ Filtrado limpio
   const prodFiltered = productos.filter((el) => {
-    // Si el filtro es null, pasa directo (true). Si tiene valor, debe coincidir.
     const matchBrand = activeFilters.brand
       ? el.marca === activeFilters.brand
       : true;
+
     const matchCat = activeFilters.cat
       ? el.categoria === activeFilters.cat
       : true;
+
     const matchTipo = activeFilters.tipo
       ? el.tipo === activeFilters.tipo
       : true;
 
-    // Solo retorna el producto si cumple TODAS las condiciones activas
     return matchBrand && matchCat && matchTipo;
   });
 
   return (
     <>
+      {/* 🔹 FILTROS */}
       <section className="w-[90%] m-auto mb-12">
         <div className="flex flex-wrap justify-center gap-3" id="barra-filtros">
           {filters.map((el, id) =>
@@ -44,21 +52,19 @@ export default function ProductsContent({ productos }) {
               <FilterButton
                 key={id}
                 title={el.title}
-                filterConfig={el} // Le pasas TODO el objeto: { title: "Piusi", brand: "PIUSI" }
-                activeFilters={activeFilters} // Le pasas el estado general
-                setFilter={setFilter}
-                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8"
+                filterConfig={el}
+                activeFilters={activeFilters}
+                setFilter={handleSetFilter} // ✅ usamos la función correcta
               />
             ),
           )}
         </div>
       </section>
+
+      {/* 🔹 PRODUCTOS */}
       <section className="w-[90%] m-auto">
         {prodFiltered.length < 1 ? (
-          <div
-            id="mensaje-sin-resultados"
-            className=" text-center w-full py-10"
-          >
+          <div id="mensaje-sin-resultados" className="text-center w-full py-10">
             <p className="text-slate-500 text-lg">
               No se encontraron productos con ese filtro.
             </p>
@@ -74,21 +80,14 @@ export default function ProductsContent({ productos }) {
             Productos encontrados: {prodFiltered.length}
           </p>
         )}
+
         <div
           id="contenedor-productos"
           className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8"
         >
-          {activeFilters.tipo == "all" ? (
-            productos.map((el) => (
-              <ProductCard key={el.id} producto={el} main={false} />
-            ))
-          ) : productos ? (
-            prodFiltered.map((el) => (
-              <ProductCard key={el.id} producto={el} main={false} />
-            ))
-          ) : (
-            <p className="text-slate-400 animate-pulse">Cargando catálogo...</p>
-          )}
+          {prodFiltered.map((el) => (
+            <ProductCard key={el.id} producto={el} main={false} />
+          ))}
         </div>
       </section>
     </>

@@ -13,24 +13,32 @@ export default async function Home() {
     .select("*")
     .eq("destacado", true);
 
-  // 2. Adaptamos el nombre de la imagen para tu UI
+  // 2. Adaptamos el nombre de la imagen y metemos validación
   const productosDestacados =
-    data?.map((p) => ({
-      id: p.id,
-      nombre: p.nombre,
-      categoria: p.categoria,
-      descripcion: p.descripcion,
-      precio: p.precio,
-      destacado: p.destacado,
-      imagen: p.imagen_url,
-    })) || [];
+    data?.map((p) => {
+      // Verificamos si la imagen es válida (empieza con http o /)
+      const urlValida =
+        p.imagen_url &&
+        (p.imagen_url.startsWith("http") || p.imagen_url.startsWith("/"));
+
+      return {
+        id: p.id,
+        nombre: p.nombre,
+        categoria: p.categoria,
+        descripcion: p.descripcion,
+        precio: p.precio,
+        destacado: p.destacado,
+        // Si no es válida (ej. "ads"), usamos el placeholder que ya permitimos en next.config
+        imagen: urlValida ? p.imagen_url : "https://via.placeholder.com/300",
+      };
+    }) || [];
 
   return (
     <>
       <main className="w-full max-w-full mt-6">
         <Hero />
         <Distributors />
-        {/* 3. Pasamos los datos como prop */}
+        {/* 3. Pasamos los datos ya filtrados y seguros como prop */}
         <MainProducts productosDestacados={productosDestacados} />
         <IntegralSolutions />
       </main>
