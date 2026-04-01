@@ -1,10 +1,9 @@
 "use client";
 import FilterButton from "./FilterButton";
-import { productos } from "@/app/_constants/data";
 import ProductCard from "@/app/_components/ProductCard";
 import { act, useState } from "react";
 import { filters } from "../_constants/filters";
-export default function ProductsContent() {
+export default function ProductsContent({ productos }) {
   const [activeFilters, setFilter] = useState({
     brand: null,
     cat: null,

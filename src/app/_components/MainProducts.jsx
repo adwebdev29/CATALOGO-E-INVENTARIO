@@ -4,11 +4,13 @@ import SliderButton from "./SliderButton";
 import H2 from "./H2";
 import MainProductsList from "./MainProductsList";
 import { useRef } from "react";
-export default function MainProducts() {
+
+// 1. Recibe la prop
+export default function MainProducts({ productosDestacados }) {
   const scrollRef = useRef(null);
+
   const handleScroll = (direction) => {
     if (scrollRef.current) {
-      // 350px es un buen promedio para mover una tarjeta + gap
       const scrollAmount = direction === "right" ? 350 : -350;
       scrollRef.current.scrollBy({ left: scrollAmount, behavior: "smooth" });
     }
@@ -28,7 +30,9 @@ export default function MainProducts() {
         </Link>
       </div>
 
-      <MainProductsList ref={scrollRef} />
+      {/* 2. Pasa la prop hacia abajo */}
+      <MainProductsList ref={scrollRef} productos={productosDestacados} />
+
       <div className="md:hidden text-center mt-4">
         <Link
           href="/productos"
