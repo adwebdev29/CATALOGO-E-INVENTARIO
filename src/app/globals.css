@@ -1,0 +1,23 @@
+@import "tailwindcss";
+@plugin 'tailwind-scrollbar';
+
+:root {
+  --background: oklch(96.8% 0.007 247.896);
+  --foreground: oklch(27.9% 0.041 260.031);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+
+  /* Agregamos tus fuentes aquí para que funcionen como font-poppins y font-inter */
+  --font-poppins: var(--font-poppins);
+  --font-inter: var(--font-inter);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  /* Usamos Inter como fuente base por defecto */
+  font-family: var(--font-inter), ui-sans-serif, system-ui;
+}
