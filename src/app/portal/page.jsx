@@ -39,10 +39,10 @@ export default function AdminLogin() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-blue-900 p-4">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-white p-4">
       <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden">
         {/* Cabecera con la marca Woox */}
-        <div className="bg-blue-600 p-8 text-center">
+        <div className="bg-emerald-900 p-8 text-center">
           <h1 className="text-4xl font-black text-white tracking-widest uppercase">
             WOOX
           </h1>
@@ -61,7 +61,7 @@ export default function AdminLogin() {
               placeholder="admin@woox.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full border-2 border-slate-200 p-3 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-black font-medium bg-slate-50"
+              className="w-full border-2 border-slate-200 p-3 rounded-lg focus:outline-none focus:border-emerald-700 focus:ring-1 focus:ring-emerald-700 transition-all text-t font-medium bg-slate-50"
               required
             />
           </div>
@@ -75,7 +75,7 @@ export default function AdminLogin() {
               placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full border-2 border-slate-200 p-3 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-black font-medium bg-slate-50"
+              className="w-full border-2 border-slate-200 p-3 rounded-lg focus:outline-none focus:border-emerald-700 focus:ring-1 focus:ring-emerald-700 transition-all text-black font-medium bg-slate-50"
               required
             />
           </div>
@@ -83,7 +83,7 @@ export default function AdminLogin() {
           <button
             type="submit"
             disabled={cargando}
-            className="w-full bg-blue-600 text-white font-bold text-lg p-3 rounded-lg hover:bg-blue-700 transition-all shadow-lg hover:shadow-blue-500/30 mt-4 active:scale-[0.98] disabled:bg-blue-400 disabled:cursor-not-allowed"
+            className="w-full bg-gradient-to-r from-emerald-700 via-emerald-600 to-emerald-500 text-white font-bold text-lg p-3 rounded-lg hover:bg-emerald-700 transition-all shadow-lg hover:shadow-blue-500/30 mt-4 active:scale-[0.98] disabled:bg-emerald-400 disabled:cursor-not-allowed"
           >
             {cargando ? "Iniciando sesión..." : "Ingresar"}
           </button>

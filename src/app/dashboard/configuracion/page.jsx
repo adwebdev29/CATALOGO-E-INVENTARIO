@@ -1,87 +1,134 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/app/_lib/supabase/supabase";
 
-export default function Configuracion() {
-  const [nuevaPassword, setNuevaPassword] = useState("");
-  const [cargando, setCargando] = useState(false);
-  const [userEmail, setUserEmail] = useState("");
+export default function ConfiguracionPage() {
+  const [categorias, setCategorias] = useState([]);
+  const [nuevaCategoria, setNuevaCategoria] = useState("");
 
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) setUserEmail(session.user.email);
-    });
+  const fetchCategorias = useCallback(async () => {
+    const { data, error } = await supabase
+      .from("categorias")
+      .select("*")
+      .order("nombre", { ascending: true });
+    if (!error) setCategorias(data || []);
   }, []);
 
-  const handleUpdatePassword = async (e) => {
+  useEffect(() => {
+    fetchCategorias();
+  }, [fetchCategorias]);
+
+  const handleAgregarCategoria = async (e) => {
     e.preventDefault();
-    setCargando(true);
+    const nombreLimpio = nuevaCategoria.trim();
+    if (!nombreLimpio) return;
 
-    const { error } = await supabase.auth.updateUser({
-      password: nuevaPassword,
-    });
+    try {
+      const { data, error } = await supabase
+        .from("categorias")
+        .insert([{ nombre: nombreLimpio }])
+        .select();
+      if (error) {
+        if (error.code === "23505")
+          throw new Error("Esta categoría ya existe.");
+        throw error;
+      }
+      if (!data || data.length === 0)
+        throw new Error("Bloqueado por Supabase RLS.");
 
-    if (error) {
-      alert("Error: " + error.message);
-    } else {
-      alert("Tu contraseña ha sido actualizada con éxito.");
-      setNuevaPassword("");
+      setNuevaCategoria("");
+      await fetchCategorias();
+      alert("✅ Categoría agregada");
+    } catch (error) {
+      alert("❌ Error: " + error.message);
     }
-    setCargando(false);
+  };
+
+  const handleEliminarCategoria = async (id) => {
+    if (
+      !window.confirm(
+        "¿Seguro que deseas eliminar esta categoría? Si hay productos usándola, podrían quedarse sin categoría visible.",
+      )
+    )
+      return;
+    try {
+      const { data, error } = await supabase
+        .from("categorias")
+        .delete()
+        .eq("id", id)
+        .select();
+      if (error) throw error;
+      if (!data || data.length === 0)
+        throw new Error("Bloqueado por Supabase RLS.");
+
+      await fetchCategorias();
+    } catch (error) {
+      alert("❌ Error al eliminar: " + error.message);
+    }
   };
 
   return (
-    <div className="max-w-3xl space-y-8">
-      {/* TARJETA DE INFO */}
-      <div className="bg-white p-8 rounded-xl shadow-sm border border-slate-200">
-        <h2 className="text-2xl font-bold text-slate-800 mb-2">Mi Cuenta</h2>
-        <p className="text-slate-500 mb-6">
-          Información general de tu sesión actual.
-        </p>
-
-        <div className="bg-slate-50 p-4 rounded-lg border flex flex-col gap-1">
-          <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-            Correo Electrónico (Login)
-          </span>
-          <span className="text-lg font-medium text-slate-800">
-            {userEmail || "Cargando..."}
-          </span>
-        </div>
-      </div>
-
-      {/* TARJETA DE SEGURIDAD */}
-      <div className="bg-white p-8 rounded-xl shadow-sm border border-slate-200">
-        <h2 className="text-xl font-bold text-slate-800 mb-2">Seguridad</h2>
-        <p className="text-slate-500 mb-6">
-          Actualiza tu contraseña de acceso al panel WOOX. Te recomendamos usar
-          una combinación segura.
-        </p>
+    <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
+      {/* FORMULARIO DE CATEGORÍAS */}
+      <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 h-fit">
+        <h2 className="text-xl font-bold mb-5 text-emerald-900 border-b border-emerald-100 pb-3">
+          ⚙️ Configurar Categorías
+        </h2>
 
         <form
-          onSubmit={handleUpdatePassword}
-          className="flex flex-col sm:flex-row gap-4 items-end"
+          onSubmit={handleAgregarCategoria}
+          className="flex flex-col gap-4 text-sm"
         >
-          <div className="flex-1 w-full text-sm">
-            <label className="block text-slate-500 font-bold mb-1">
-              Nueva Contraseña
+          <div className="flex flex-col gap-1">
+            <label
+              htmlFor="cat_nombre"
+              className="font-bold text-slate-600 text-xs uppercase tracking-wider"
+            >
+              Nombre de la nueva categoría
             </label>
             <input
-              type="password"
-              value={nuevaPassword}
-              onChange={(e) => setNuevaPassword(e.target.value)}
-              className="w-full border p-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-              placeholder="Mínimo 6 caracteres"
+              id="cat_nombre"
+              type="text"
+              placeholder="Ej. Consumibles, Refacciones..."
+              value={nuevaCategoria}
+              onChange={(e) => setNuevaCategoria(e.target.value)}
+              className="w-full border border-slate-300 p-3 rounded-lg focus:ring-2 focus:ring-emerald-600 focus:border-emerald-600 focus:outline-none transition-all"
               required
             />
           </div>
+
           <button
             type="submit"
-            disabled={cargando}
-            className="w-full sm:w-auto bg-slate-800 text-white px-8 py-3 rounded-lg font-bold hover:bg-slate-700 transition disabled:bg-slate-400"
+            className="bg-emerald-700 text-white font-bold py-3 rounded-lg hover:bg-emerald-800 transition-colors shadow-md shadow-emerald-700/20"
           >
-            {cargando ? "Actualizando..." : "Actualizar Contraseña"}
+            Agregar Categoría
           </button>
         </form>
+      </div>
+
+      {/* LISTADO DE CATEGORÍAS */}
+      <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+        <h3 className="text-lg font-bold mb-4 text-emerald-900">
+          Categorías Actuales
+        </h3>
+        <ul className="divide-y divide-slate-100">
+          {categorias.map((cat) => (
+            <li key={cat.id} className="py-3 flex justify-between items-center">
+              <span className="font-medium text-slate-700">{cat.nombre}</span>
+              <button
+                onClick={() => handleEliminarCategoria(cat.id)}
+                className="text-red-500 font-bold text-sm hover:text-red-700 bg-red-50 px-3 py-1 rounded-md transition-colors"
+              >
+                Eliminar
+              </button>
+            </li>
+          ))}
+          {categorias.length === 0 && (
+            <p className="text-slate-400 text-sm py-4">
+              No hay categorías registradas.
+            </p>
+          )}
+        </ul>
       </div>
     </div>
   );

@@ -1,205 +1,118 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/app/_lib/supabase/supabase";
+import ProductFormModal from "@/app/_components/ProductFormModal";
 
 export default function ProductosCRUD() {
+  // Estados de datos
   const [productos, setProductos] = useState([]);
-  const [editandoId, setEditandoId] = useState(null);
-  const [form, setForm] = useState({
-    nombre: "",
-    categoria: "",
-    descripcion: "",
-    precio: 0,
-    destacado: false,
-    imagen_url: "",
-  });
+  const [categorias, setCategorias] = useState([]);
 
-  const fetchProductos = useCallback(async () => {
-    const { data, error } = await supabase
+  // Estados del Modal
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [productoAEditar, setProductoAEditar] = useState(null);
+
+  // Estados de Paginación
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const ITEMS_PER_PAGE = 10; // Muestra 10 productos por página
+  const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
+
+  const fetchData = useCallback(async () => {
+    // 1. Obtener categorías (solo para pasarlas al modal)
+    const resCategorias = await supabase
+      .from("categorias")
+      .select("nombre")
+      .order("nombre", { ascending: true });
+    if (!resCategorias.error) setCategorias(resCategorias.data || []);
+
+    // 2. Calcular el rango de paginación
+    const from = (currentPage - 1) * ITEMS_PER_PAGE;
+    const to = from + ITEMS_PER_PAGE - 1;
+
+    // 3. Obtener solo los productos de la página actual + el conteo total
+    const { data, count, error } = await supabase
       .from("productos")
-      .select("*")
-      .order("id", { ascending: false });
-    if (error) {
-      console.error("Error al cargar productos:", error);
-    } else {
+      .select("*", { count: "exact" }) // count exacto para saber el total
+      .order("id", { ascending: false })
+      .range(from, to);
+
+    if (!error) {
       setProductos(data || []);
+      setTotalItems(count || 0);
     }
-  }, []);
+  }, [currentPage]);
 
   useEffect(() => {
-    fetchProductos();
-  }, [fetchProductos]);
+    fetchData();
+  }, [fetchData]);
 
-  const handleGuardar = async (e) => {
-    e.preventDefault();
-
-    // Limpieza estricta de datos
-    const payload = {
-      nombre: form.nombre.trim(),
-      categoria: form.categoria.trim(),
-      descripcion: form.descripcion.trim(),
-      precio: Number(form.precio) || 0,
-      destacado: Boolean(form.destacado),
-      imagen_url: form.imagen_url.trim(),
-    };
-
-    try {
-      if (editandoId) {
-        const { error } = await supabase
-          .from("productos")
-          .update(payload)
-          .eq("id", editandoId);
-        if (error) throw error;
-        alert("✅ Producto actualizado correctamente");
-      } else {
-        const { error } = await supabase.from("productos").insert([payload]);
-        if (error) throw error;
-        alert("✅ Producto creado correctamente");
-      }
-
-      setForm({
-        nombre: "",
-        categoria: "",
-        descripcion: "",
-        precio: 0,
-        destacado: false,
-        imagen_url: "",
-      });
-      setEditandoId(null);
-      await fetchProductos();
-    } catch (error) {
-      console.error("Fallo en CRUD de Supabase:", error);
-      alert(
-        "❌ Error al guardar: " +
-          (error.message || "Revisa la consola para más detalles."),
-      );
-    }
+  const handleNuevoProducto = () => {
+    setProductoAEditar(null);
+    setIsModalOpen(true);
   };
 
   const handleEditar = (producto) => {
-    setForm({
-      nombre: producto.nombre || "",
-      categoria: producto.categoria || "",
-      descripcion: producto.descripcion || "",
-      precio: producto.precio || 0,
-      destacado: producto.destacado || false,
-      imagen_url: producto.imagen_url || "",
-    });
-    setEditandoId(producto.id);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    setProductoAEditar(producto);
+    setIsModalOpen(true);
   };
 
   const handleEliminar = async (id) => {
     if (!window.confirm("¿Seguro que quieres eliminar este producto?")) return;
     try {
-      const { error } = await supabase.from("productos").delete().eq("id", id);
+      const { data, error } = await supabase
+        .from("productos")
+        .delete()
+        .eq("id", id)
+        .select();
       if (error) throw error;
-      await fetchProductos();
+      if (!data || data.length === 0)
+        throw new Error("Supabase bloqueó el borrado.");
+
+      // Si borramos el último item de una página (y no es la primera), retrocedemos
+      if (productos.length === 1 && currentPage > 1) {
+        setCurrentPage(currentPage - 1);
+      } else {
+        await fetchData();
+      }
       alert("🗑️ Producto eliminado");
     } catch (error) {
-      console.error("Error al eliminar:", error);
-      alert("❌ Error al eliminar: " + error.message);
+      alert("❌ " + error.message);
     }
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      {/* FORMULARIO */}
-      <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 h-fit lg:sticky lg:top-4 order-1">
-        <h2 className="text-lg font-bold mb-5 text-emerald-900 border-b border-emerald-100 pb-3">
-          {editandoId ? "✏️ Editar Producto" : "➕ Nuevo Producto"}
-        </h2>
-        <form onSubmit={handleGuardar} className="flex flex-col gap-4 text-sm">
-          <input
-            type="text"
-            placeholder="Nombre del producto"
-            value={form.nombre}
-            onChange={(e) => setForm({ ...form, nombre: e.target.value })}
-            className="w-full border border-slate-300 p-3 rounded-lg focus:ring-2 focus:ring-emerald-600 focus:border-emerald-600 focus:outline-none transition-all"
-            required
-          />
-
-          <div className="grid grid-cols-2 gap-3">
-            <input
-              type="text"
-              placeholder="Categoría"
-              value={form.categoria}
-              onChange={(e) => setForm({ ...form, categoria: e.target.value })}
-              className="w-full border border-slate-300 p-3 rounded-lg focus:ring-2 focus:ring-emerald-600 focus:border-emerald-600 focus:outline-none transition-all"
-            />
-            <input
-              type="number"
-              step="0.01"
-              placeholder="Precio ($)"
-              value={form.precio}
-              onChange={(e) => setForm({ ...form, precio: e.target.value })}
-              className="w-full border border-slate-300 p-3 rounded-lg focus:ring-2 focus:ring-emerald-600 focus:border-emerald-600 focus:outline-none transition-all"
-              required
-            />
-          </div>
-
-          <input
-            type="url"
-            placeholder="URL de la Imagen"
-            value={form.imagen_url}
-            onChange={(e) => setForm({ ...form, imagen_url: e.target.value })}
-            className="w-full border border-slate-300 p-3 rounded-lg focus:ring-2 focus:ring-emerald-600 focus:border-emerald-600 focus:outline-none transition-all"
-          />
-
-          <textarea
-            placeholder="Descripción detallada..."
-            value={form.descripcion}
-            onChange={(e) => setForm({ ...form, descripcion: e.target.value })}
-            className="w-full border border-slate-300 p-3 rounded-lg focus:ring-2 focus:ring-emerald-600 focus:border-emerald-600 focus:outline-none transition-all resize-none"
-            rows="3"
-          />
-
-          <label className="flex items-center gap-3 cursor-pointer bg-emerald-50/50 hover:bg-emerald-50 p-3 rounded-lg border border-emerald-100 transition-colors mt-1">
-            <input
-              type="checkbox"
-              checked={form.destacado}
-              onChange={(e) =>
-                setForm({ ...form, destacado: e.target.checked })
-              }
-              className="w-5 h-5 text-emerald-700 rounded focus:ring-emerald-600 cursor-pointer"
-            />
-            <span className="font-bold text-emerald-900">
-              Destacar en Inicio
-            </span>
-          </label>
-
-          <div className="flex gap-3 mt-3">
-            <button
-              type="submit"
-              className="bg-emerald-700 text-white font-bold py-3 rounded-lg hover:bg-emerald-800 transition-colors flex-1 shadow-md shadow-emerald-700/20"
-            >
-              {editandoId ? "Guardar Cambios" : "Crear Producto"}
-            </button>
-            {editandoId && (
-              <button
-                type="button"
-                onClick={() => {
-                  setEditandoId(null);
-                  setForm({
-                    nombre: "",
-                    categoria: "",
-                    descripcion: "",
-                    precio: 0,
-                    destacado: false,
-                    imagen_url: "",
-                  });
-                }}
-                className="bg-slate-100 text-slate-600 font-bold py-3 px-5 rounded-lg hover:bg-slate-200 transition-colors"
-              >
-                Cancelar
-              </button>
-            )}
-          </div>
-        </form>
+    <div className="flex flex-col gap-6">
+      {/* Botón flotante superior */}
+      <div className="flex justify-between items-center bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
+        <div>
+          <h1 className="text-xl font-bold text-emerald-900">
+            Inventario de Productos
+          </h1>
+          <p className="text-sm text-slate-500">
+            Total registrados: {totalItems}
+          </p>
+        </div>
+        <button
+          onClick={handleNuevoProducto}
+          className="bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-2 px-6 rounded-lg shadow-md transition-colors flex items-center gap-2"
+        >
+          <span className="text-xl leading-none">+</span>
+          <span className="hidden sm:inline">Agregar Producto</span>
+        </button>
       </div>
 
+      {/* COMPONENTE MODAL */}
+      <ProductFormModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        categorias={categorias}
+        productoAEditar={productoAEditar}
+        onSaveSuccess={fetchData}
+      />
+
       {/* TABLA RESPONSIVA */}
-      <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden order-2">
+      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
         <div className="overflow-x-auto w-full">
           <table className="w-full text-left border-collapse whitespace-nowrap min-w-[600px]">
             <thead className="bg-slate-50 border-b border-slate-200">
@@ -211,10 +124,10 @@ export default function ProductosCRUD() {
                   Nombre
                 </th>
                 <th className="p-4 font-bold text-slate-500 text-xs uppercase tracking-wider">
-                  Precio
+                  Categoría
                 </th>
-                <th className="p-4 font-bold text-slate-500 text-xs uppercase tracking-wider text-center">
-                  Destacado
+                <th className="p-4 font-bold text-slate-500 text-xs uppercase tracking-wider">
+                  Precio
                 </th>
                 <th className="p-4 font-bold text-slate-500 text-xs uppercase tracking-wider text-center">
                   Acciones
@@ -239,11 +152,9 @@ export default function ProductosCRUD() {
                   <td className="p-4 font-medium text-slate-800 text-sm truncate max-w-[200px]">
                     {p.nombre}
                   </td>
+                  <td className="p-4 text-slate-600 text-sm">{p.categoria}</td>
                   <td className="p-4 text-emerald-700 font-semibold text-sm">
                     ${p.precio}
-                  </td>
-                  <td className="p-4 text-center text-yellow-500 text-lg">
-                    {p.destacado ? "★" : ""}
                   </td>
                   <td className="p-4 text-center">
                     <button
@@ -267,13 +178,38 @@ export default function ProductosCRUD() {
                     colSpan="5"
                     className="p-8 text-center text-slate-400 font-medium"
                   >
-                    No hay productos registrados.
+                    No hay productos en esta página.
                   </td>
                 </tr>
               )}
             </tbody>
           </table>
         </div>
+
+        {/* CONTROLES DE PAGINACIÓN */}
+        {totalPages > 1 && (
+          <div className="bg-slate-50 border-t border-slate-200 p-4 flex justify-between items-center">
+            <button
+              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+              className="px-4 py-2 bg-white border border-slate-300 rounded-md text-sm font-bold text-slate-600 hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              ← Anterior
+            </button>
+            <span className="text-sm font-medium text-slate-600">
+              Página {currentPage} de {totalPages}
+            </span>
+            <button
+              onClick={() =>
+                setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+              }
+              disabled={currentPage === totalPages}
+              className="px-4 py-2 bg-white border border-slate-300 rounded-md text-sm font-bold text-slate-600 hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              Siguiente →
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

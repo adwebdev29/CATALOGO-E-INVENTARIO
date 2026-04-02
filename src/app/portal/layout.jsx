@@ -1,4 +1,4 @@
-import "@/app/globals.css";
+import "@/app/globals.css"; // <-- Vital para que cargue Tailwind
 
 export const metadata = {
   title: "WOOX | Acceso al Portal",
@@ -8,7 +8,7 @@ export const metadata = {
 export default function PortalLayout({ children }) {
   return (
     <html lang="es">
-      <body className="antialiased">{children}</body>
+      <body className="antialiased ">{children}</body>
     </html>
   );
 }
