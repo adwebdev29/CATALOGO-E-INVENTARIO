@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/app/_lib/supabase/supabase";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
-import "@/app/globals.css";
 
 export default function DashboardLayout({ children }) {
   const router = useRouter();
@@ -16,9 +15,8 @@ export default function DashboardLayout({ children }) {
         data: { session },
       } = await supabase.auth.getSession();
       if (!session) {
-        router.push("/admin");
+        router.push("/portal");
       } else {
-        // Obtenemos el correo del usuario logueado
         setUser(session.user);
       }
     };
@@ -27,12 +25,12 @@ export default function DashboardLayout({ children }) {
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    router.push("/admin");
+    router.push("/portal");
   };
 
   if (!user)
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 text-black">
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 text-emerald-900 font-bold">
         Cargando interfaz...
       </div>
     );
@@ -45,60 +43,69 @@ export default function DashboardLayout({ children }) {
   ];
 
   return (
-    <html lang="es">
-      <body className="bg-slate-100 flex h-screen overflow-hidden text-slate-800">
-        {/* SIDEBAR (Estilo Factix) */}
-        <aside className="w-64 bg-[#1e293b] text-white flex flex-col shadow-xl z-20">
-          <div className="h-16 flex items-center px-6 border-b border-slate-700 bg-[#0f172a]">
-            <h2 className="text-2xl font-black tracking-widest text-white">
-              WOOX
-            </h2>
-          </div>
-          <nav className="flex-1 py-6 flex flex-col gap-2 px-4 overflow-y-auto">
-            {navLinks.map((link) => {
-              const isActive = pathname === link.href;
-              return (
-                <Link
-                  key={link.name}
-                  href={link.href}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all ${
-                    isActive
-                      ? "bg-blue-600 text-white shadow-md"
-                      : "text-slate-400 hover:bg-slate-800 hover:text-white"
-                  }`}
-                >
-                  <span>{link.icon}</span>
-                  {link.name}
-                </Link>
-              );
-            })}
-          </nav>
-        </aside>
-
-        {/* CONTENEDOR PRINCIPAL */}
-        <div className="flex-1 flex flex-col h-screen overflow-hidden">
-          {/* HEADER */}
-          <header className="h-16 bg-white border-b flex items-center justify-between px-8 shadow-sm z-10">
-            <h1 className="text-lg font-semibold text-slate-700">
-              {navLinks.find((l) => l.href === pathname)?.name || "Panel"}
-            </h1>
-            <div className="flex items-center gap-6">
-              <span className="text-sm font-medium text-slate-600">
-                Hola, {user?.email}
-              </span>
-              <button
-                onClick={handleLogout}
-                className="text-sm font-bold text-red-500 hover:text-red-700 transition-colors"
-              >
-                Cerrar Sesión
-              </button>
-            </div>
-          </header>
-
-          {/* ÁREA DE CONTENIDO DINÁMICO */}
-          <main className="flex-1 overflow-y-auto p-8">{children}</main>
+    <div className="bg-slate-50 flex flex-col md:flex-row h-screen overflow-hidden text-slate-800">
+      {/* SIDEBAR RESPONSIVO - VERDE PINO */}
+      <aside className="w-full md:w-64 bg-emerald-900 text-white flex flex-col shadow-xl z-20 flex-shrink-0 order-2 md:order-1">
+        <div className="hidden md:flex h-16 items-center px-6 border-b border-emerald-800 bg-emerald-950">
+          <h2 className="text-2xl font-black tracking-widest text-white">
+            WOOX
+          </h2>
         </div>
-      </body>
-    </html>
+
+        <nav className="flex-none md:flex-1 p-2 md:py-6 flex flex-row md:flex-col gap-2 overflow-x-auto md:overflow-y-auto scrollbar-none">
+          {navLinks.map((link) => {
+            const isActive = pathname === link.href;
+            return (
+              <Link
+                key={link.name}
+                href={link.href}
+                className={`flex items-center justify-center md:justify-start gap-2 md:gap-3 px-4 py-3 rounded-lg font-medium transition-all whitespace-nowrap ${
+                  isActive
+                    ? "bg-emerald-700 text-white shadow-md"
+                    : "text-emerald-100 hover:bg-emerald-800 hover:text-white"
+                }`}
+              >
+                <span className="text-xl md:text-base">{link.icon}</span>
+                <span className="text-xs md:text-base">{link.name}</span>
+              </Link>
+            );
+          })}
+
+          <Link
+            href="/"
+            target="_blank"
+            className="hidden md:flex mt-auto items-center gap-3 px-4 py-3 rounded-lg font-bold text-emerald-200 hover:bg-emerald-800 transition-all border border-emerald-700/50"
+          >
+            <span>🌐</span> Ver Sitio Público
+          </Link>
+        </nav>
+      </aside>
+
+      {/* CONTENEDOR PRINCIPAL */}
+      <div className="flex-1 flex flex-col h-full overflow-hidden order-1 md:order-2">
+        {/* HEADER RESPONSIVO */}
+        <header className="h-16 bg-white border-b flex items-center justify-between px-4 md:px-8 shadow-sm z-10 flex-shrink-0">
+          <h1 className="text-base md:text-lg font-bold text-emerald-900 truncate">
+            {navLinks.find((l) => l.href === pathname)?.name || "Panel"}
+          </h1>
+          <div className="flex items-center gap-4">
+            <span className="hidden md:inline text-sm font-medium text-slate-600">
+              {user?.email}
+            </span>
+            <button
+              onClick={handleLogout}
+              className="text-xs md:text-sm font-bold text-red-600 hover:text-red-800 transition-colors bg-red-50 px-4 py-2 rounded-lg"
+            >
+              Salir
+            </button>
+          </div>
+        </header>
+
+        {/* ÁREA DE CONTENIDO DINÁMICO */}
+        <main className="flex-1 overflow-y-auto p-4 md:p-8 bg-slate-100/50">
+          {children}
+        </main>
+      </div>
+    </div>
   );
 }
