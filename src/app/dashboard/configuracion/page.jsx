@@ -72,7 +72,7 @@ export default function ConfiguracionPage() {
       {/* FORMULARIO DE CATEGORÍAS */}
       <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 h-fit">
         <h2 className="text-xl font-bold mb-5 text-emerald-900 border-b border-emerald-100 pb-3">
-          ⚙️ Configurar Categorías
+          ⚙️ Agregar Categorías
         </h2>
 
         <form
