@@ -3,7 +3,7 @@ import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/app/_lib/supabase/supabase";
-import ProductDetailModal from "./ProductDetailModal";
+import ProductDetailModal from "./ProductDetailModal"; // Usa el nombre de tu archivo
 
 export default function Header() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -50,9 +50,12 @@ export default function Header() {
       abortControllerRef.current = new AbortController();
 
       try {
+        // 🟢 TRAEMOS MÁS DATOS (como descripción) POR SI LOS NECESITA EL MODAL LUEGO LUEGO
         const { data, error } = await supabase
           .from("productos")
-          .select("id, nombre, precio, imagen_url, categoria")
+          .select(
+            "id, nombre, precio, imagen_url, categoria, descripcion, stock, marca",
+          )
           .ilike("nombre", `%${term}%`)
           .limit(5)
           .abortSignal(abortControllerRef.current.signal); // Le pasamos la señal a Supabase
@@ -89,17 +92,12 @@ export default function Header() {
     }
   };
 
-  const abrirModalProducto = async (id) => {
+  // 🟢 AHORA ESTO ES INSTANTÁNEO: Ya no hacemos fetch a Supabase,
+  // solo usamos el producto que ya está en la variable "sugerencias"
+  const abrirModalProducto = (producto) => {
     setShowDropdown(false);
-    const { data } = await supabase
-      .from("productos")
-      .select("*")
-      .eq("id", id)
-      .single();
-    if (data) {
-      setProductoSeleccionado(data);
-      setIsModalOpen(true);
-    }
+    setProductoSeleccionado(producto);
+    setIsModalOpen(true);
   };
 
   const NAV_LINKS = [
@@ -148,7 +146,7 @@ export default function Header() {
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   onFocus={() => {
-                    if (searchTerm.trim().length >= 1) setShowDropdown(true); // 🟢 Ahora reacciona desde 1 letra
+                    if (searchTerm.trim().length >= 1) setShowDropdown(true);
                   }}
                   onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
                   className="w-full pl-10 pr-4 py-2 bg-[#f2f3ff] rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-[#004532] transition-all"
@@ -170,8 +168,10 @@ export default function Header() {
                       {sugerencias.map((prod) => (
                         <li key={prod.id}>
                           <button
-                            onClick={() => abrirModalProducto(prod.id)}
-                            className="w-full flex items-center gap-3 p-3 hover:bg-[#f2f3ff] transition-colors text-left border-b border-[#bec9c2]/10 last:border-0"
+                            // 🟢 PASAMOS EL OBJETO COMPLETO, NO SOLO EL ID
+                            onClick={() => abrirModalProducto(prod)}
+                            // 🟢 AGREGAMOS CURSOR-POINTER Y MEJOR HOVER
+                            className="w-full flex items-center gap-3 p-3 hover:bg-[#e2e7ff] transition-colors text-left border-b border-[#bec9c2]/10 last:border-0 cursor-pointer group"
                           >
                             <img
                               src={
@@ -179,10 +179,10 @@ export default function Header() {
                                 "https://via.placeholder.com/50"
                               }
                               alt={prod.nombre}
-                              className="w-10 h-10 rounded-md object-cover bg-slate-100"
+                              className="w-10 h-10 rounded-md object-cover bg-slate-100 group-hover:scale-105 transition-transform"
                             />
                             <div className="flex-1 min-w-0">
-                              <p className="text-sm font-bold text-[#131b2e] truncate">
+                              <p className="text-sm font-bold text-[#131b2e] truncate group-hover:text-[#004532] transition-colors">
                                 {prod.nombre}
                               </p>
                               <p className="text-xs text-[#004532] font-black">
@@ -195,7 +195,7 @@ export default function Header() {
                       <li>
                         <button
                           onClick={handleSearchSubmit}
-                          className="w-full p-3 text-xs font-bold text-center text-[#3f4944] hover:text-[#004532] hover:bg-[#f2f3ff] uppercase tracking-widest transition-colors"
+                          className="w-full p-3 text-xs font-bold text-center text-[#3f4944] hover:text-[#004532] hover:bg-[#e2e7ff] uppercase tracking-widest transition-colors cursor-pointer"
                         >
                           Ver todos los resultados →
                         </button>
