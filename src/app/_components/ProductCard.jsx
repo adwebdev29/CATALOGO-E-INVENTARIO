@@ -102,7 +102,7 @@ export default function ProductCard({ producto, main = true }) {
               </button>
 
               <a
-                href={`https://wa.me/525564246246?text=Hola, me interesa el producto: ${encodeURIComponent(producto.nombre)}`}
+                href={`https://wa.me/525554946246?text=Hola, me interesa el producto: ${encodeURIComponent(producto.nombre)}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-full py-2 bg-[#131b2e] text-white font-bold rounded-lg flex items-center justify-center gap-1 hover:bg-[#1e293b] transition-colors text-[9px] sm:text-[10px] tracking-widest uppercase shadow-sm"

@@ -1,4 +1,6 @@
 import Link from "next/link";
+// 🟢 Agregamos el ícono de Phone de Lucide
+import { Mail, MapPin, Phone } from "lucide-react";
 
 export default function Footer() {
   return (
@@ -7,8 +9,8 @@ export default function Footer() {
         <div>
           <h2 className="text-2xl font-black tracking-widest mb-4">WOOX</h2>
           <p className="text-slate-400 text-sm leading-relaxed max-w-sm">
-            Hardware y herramientas de precisión arquitectónica. Elevando los
-            estándares de la industria desde 2026.
+            Equipamiento especializado para lubricación, control de fluidos y
+            mantenimiento automotriz de alto rendimiento.
           </p>
         </div>
 
@@ -30,14 +32,6 @@ export default function Footer() {
                 Catálogo Completo
               </Link>
             </li>
-            <li>
-              <Link
-                href="/dashboard"
-                className="hover:text-white transition-colors"
-              >
-                Portal de Acceso
-              </Link>
-            </li>
           </ul>
         </div>
 
@@ -45,24 +39,25 @@ export default function Footer() {
           <h3 className="text-xs font-bold uppercase tracking-widest text-[#8bd6b6] mb-4">
             Contacto
           </h3>
-          <ul className="space-y-2 text-sm text-slate-300">
-            <li className="flex items-center gap-2">
-              <span className="material-symbols-outlined text-[16px]">
-                mail
-              </span>{" "}
-              ventas@woox.com
+          {/* 🟢 LISTA ACTUALIZADA CON TU NÚMERO Y CORREO */}
+          <ul className="space-y-3 text-sm text-slate-300">
+            <li className="flex items-center gap-3">
+              <Phone size={16} className="text-[#8bd6b6]" />
+              +52 55 5494 6246
             </li>
-            <li className="flex items-center gap-2">
-              <span className="material-symbols-outlined text-[16px]">
-                location_on
-              </span>{" "}
+            <li className="flex items-center gap-3">
+              <Mail size={16} className="text-[#8bd6b6]" />
+              wooxmexico@gmail.com
+            </li>
+            <li className="flex items-center gap-3">
+              <MapPin size={16} className="text-[#8bd6b6]" />
               Naucalpan, Edo. Mex
             </li>
           </ul>
         </div>
       </div>
       <div className="max-w-7xl mx-auto text-center border-t border-white/10 pt-8 text-xs text-slate-500 uppercase tracking-widest">
-        &copy; {new Date().getFullYear()} WOOX Technologies. Todos los derechos
+        © {new Date().getFullYear()} WOOX Technologies. Todos los derechos
         reservados.
       </div>
     </footer>

@@ -81,7 +81,6 @@ export default function Header() {
   const NAV_LINKS = [
     { name: "Inicio", path: "/" },
     { name: "Catálogo", path: "/catalogo" },
-    { name: "Nosotros", path: "/nosotros" },
     { name: "Contacto", path: "/contacto" },
   ];
 

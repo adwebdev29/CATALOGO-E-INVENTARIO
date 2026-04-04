@@ -156,7 +156,7 @@ export default function CartDrawer() {
 
             {/* 🟢 WhatsApp directo (Color oficial y sombra) */}
             <a
-              href={`https://wa.me/525564246246?text=${getWhatsAppMessage()}`}
+              href={`https://wa.me/525554946246?text=${getWhatsAppMessage()}`}
               target="_blank"
               rel="noopener noreferrer"
               className="w-full py-4 bg-[#25D366] hover:bg-[#1ebd5a] text-white font-bold uppercase tracking-widest text-xs flex items-center justify-center gap-2 transition-all rounded-lg shadow-md hover:shadow-lg hover:-translate-y-0.5"
