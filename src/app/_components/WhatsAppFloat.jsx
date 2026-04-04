@@ -1,7 +1,7 @@
 export default function WhatsAppFloat() {
   return (
     <a
-      href="https://wa.me/525564246246" // Verifica que este sea tu número
+      href="https://wa.me/5554946246" // Verifica que este sea tu número
       target="_blank"
       rel="noopener noreferrer"
       aria-label="Contactar por WhatsApp"

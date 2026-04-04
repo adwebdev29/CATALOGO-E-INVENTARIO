@@ -1,9 +1,13 @@
 "use client";
 
 import { useEffect } from "react";
+import { useCart } from "@/app/_context/CartContext";
+// 🟢 Importamos los íconos de Lucide
+import { X, ShoppingCart, MessageCircle } from "lucide-react";
 
 export default function ProductDetailModal({ producto, isOpen, onClose }) {
-  // Evitar que el fondo haga scroll cuando el modal está abierto
+  const { addToCart } = useCart();
+
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = "hidden";
@@ -17,26 +21,27 @@ export default function ProductDetailModal({ producto, isOpen, onClose }) {
 
   if (!isOpen || !producto) return null;
 
+  const handleAddToCart = () => {
+    addToCart(producto);
+    onClose();
+  };
+
   return (
     <div
       className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-[#131b2e]/60 backdrop-blur-sm transition-opacity"
-      onClick={onClose} // Cierra al hacer clic en el fondo gris
+      onClick={onClose}
     >
       <div
         className="bg-white rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl relative flex flex-col md:flex-row animate-in fade-in zoom-in-95 duration-200"
-        onClick={(e) => e.stopPropagation()} // Evita que se cierre al hacer clic dentro de la tarjeta
+        onClick={(e) => e.stopPropagation()}
       >
         {/* Botón Cerrar */}
         <button
           onClick={onClose}
           className="absolute top-4 right-4 z-10 bg-white/80 backdrop-blur-md w-10 h-10 flex items-center justify-center rounded-full text-[#131b2e] hover:bg-[#f2f3ff] hover:text-red-500 transition-colors shadow-sm"
         >
-          <span
-            className="material-symbols-outlined"
-            style={{ fontSize: "24px" }}
-          >
-            close
-          </span>
+          {/* 🟢 Ícono Lucide */}
+          <X size={24} strokeWidth={2} />
         </button>
 
         {/* Imagen del Producto */}
@@ -78,21 +83,27 @@ export default function ProductDetailModal({ producto, isOpen, onClose }) {
               "Un equipo de alto rendimiento diseñado para la excelencia arquitectónica y profesional."}
           </p>
 
-          {/* Botones de Acción */}
-          <div className="flex gap-4 mt-auto">
+          <div className="flex flex-col sm:flex-row gap-3 mt-auto">
+            {/* Botón Carrito */}
+            <button
+              onClick={handleAddToCart}
+              className="flex-1 py-4 bg-[#004532] text-white font-bold rounded-lg flex items-center justify-center gap-2 hover:bg-[#065f46] transition-colors text-xs tracking-widest uppercase shadow-lg"
+            >
+              {/* 🟢 Ícono Lucide */}
+              <ShoppingCart size={18} strokeWidth={2} />
+              Al Carrito
+            </button>
+
+            {/* Botón WhatsApp */}
             <a
-              href={`https://wa.me/525512345678?text=Hola, me interesa el producto: ${encodeURIComponent(producto.nombre)}`}
+              href={`https://wa.me/5554946246?text=Hola, me interesa el producto: ${encodeURIComponent(producto.nombre)}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex-1 py-4 bg-[#131b2e] text-white font-bold rounded-lg flex items-center justify-center gap-2 hover:bg-[#004532] transition-colors text-xs tracking-widest uppercase shadow-lg"
+              className="flex-1 py-4 bg-[#131b2e] text-white font-bold rounded-lg flex items-center justify-center gap-2 hover:bg-[#1e293b] transition-colors text-xs tracking-widest uppercase shadow-lg"
             >
-              <span
-                className="material-symbols-outlined"
-                style={{ fontSize: "18px" }}
-              >
-                chat
-              </span>
-              Cotizar
+              {/* 🟢 Ícono Lucide */}
+              <MessageCircle size={18} strokeWidth={2} />
+              WhatsApp
             </a>
           </div>
         </div>

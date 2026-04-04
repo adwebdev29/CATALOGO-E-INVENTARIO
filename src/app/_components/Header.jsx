@@ -1,39 +1,35 @@
 "use client";
 import Link from "next/link";
+import Image from "next/image";
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/app/_lib/supabase/supabase";
-import ProductDetailModal from "./ProductDetailModal"; // Usa el nombre de tu archivo
+import ProductDetailModal from "./ProductDetailModal";
+import { useCart } from "@/app/_context/CartContext";
 
 export default function Header() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const router = useRouter();
 
-  // 🟢 ESTADOS PARA BÚSQUEDA EN VIVO
+  const { totalItems, setIsCartOpen } = useCart();
+
   const [sugerencias, setSugerencias] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
 
-  // 🟢 ESTADOS PARA EL MODAL DESDE EL HEADER
   const [productoSeleccionado, setProductoSeleccionado] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // 🔥 REFERENCIA PARA EL ABORTCONTROLLER (El truco de Jonas)
   const abortControllerRef = useRef(null);
 
   useEffect(() => {
     const term = searchTerm.trim();
-
-    // Si borra todo, limpiamos inmediatamente
     if (term.length === 0) {
       setSugerencias([]);
       setShowDropdown(false);
       setIsSearching(false);
-      // Cancelamos cualquier búsqueda en progreso
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
-      }
+      if (abortControllerRef.current) abortControllerRef.current.abort();
       return;
     }
 
@@ -41,16 +37,10 @@ export default function Header() {
     setShowDropdown(true);
 
     const fetchData = async () => {
-      // 1. Si hay una petición anterior corriendo, la MATAMOS.
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
-      }
-
-      // 2. Creamos un nuevo controlador para esta nueva letra
+      if (abortControllerRef.current) abortControllerRef.current.abort();
       abortControllerRef.current = new AbortController();
 
       try {
-        // 🟢 TRAEMOS MÁS DATOS (como descripción) POR SI LOS NECESITA EL MODAL LUEGO LUEGO
         const { data, error } = await supabase
           .from("productos")
           .select(
@@ -58,29 +48,19 @@ export default function Header() {
           )
           .ilike("nombre", `%${term}%`)
           .limit(5)
-          .abortSignal(abortControllerRef.current.signal); // Le pasamos la señal a Supabase
+          .abortSignal(abortControllerRef.current.signal);
 
-        // Si la petición no fue abortada y no hubo error, actualizamos la lista
-        if (!error) {
-          setSugerencias(data || []);
-        }
+        if (!error) setSugerencias(data || []);
       } catch (error) {
-        // Ignoramos los errores que sean específicamente porque nosotros abortamos la petición
-        if (error.name !== "AbortError") {
+        if (error.name !== "AbortError")
           console.error("Error en la búsqueda:", error);
-        }
       } finally {
         setIsSearching(false);
       }
     };
 
-    // Mantenemos el Debounce cortito (150ms) combinado con el AbortController
     const timer = setTimeout(fetchData, 150);
-
-    // Función de limpieza del useEffect
-    return () => {
-      clearTimeout(timer);
-    };
+    return () => clearTimeout(timer);
   }, [searchTerm]);
 
   const handleSearchSubmit = (e) => {
@@ -92,8 +72,6 @@ export default function Header() {
     }
   };
 
-  // 🟢 AHORA ESTO ES INSTANTÁNEO: Ya no hacemos fetch a Supabase,
-  // solo usamos el producto que ya está en la variable "sugerencias"
   const abrirModalProducto = (producto) => {
     setShowDropdown(false);
     setProductoSeleccionado(producto);
@@ -111,11 +89,21 @@ export default function Header() {
     <>
       <header className="fixed top-0 w-full bg-white border-b border-[#bec9c2]/30 z-40 h-16 flex items-center shadow-sm">
         <div className="max-w-7xl mx-auto w-full px-6 flex justify-between items-center gap-4">
+          {/* 🟢 LOGO MÁS GRANDE */}
           <Link
             href="/"
-            className="text-2xl font-black tracking-widest text-[#131b2e] z-50"
+            className="flex items-center z-50 transition-transform hover:opacity-90 py-1"
+            aria-label="Ir a Inicio"
           >
-            WOOX
+            <Image
+              src="/img/logo-woox.webp"
+              alt="WOOX Logo"
+              width={180} // Le dimos más caja de referencia
+              height={60}
+              // 🟢 AQUÍ ESTÁ LA MAGIA: h-10 en móvil (40px) y h-12 en PC (48px)
+              className="h-10 sm:h-14 w-auto object-contain"
+              priority
+            />
           </Link>
 
           <div className="hidden md:flex items-center gap-8 flex-1 justify-end">
@@ -131,7 +119,6 @@ export default function Header() {
               ))}
             </nav>
 
-            {/* BUSCADOR CON DROPDOWN (PC) */}
             <div className="relative w-full max-w-xs">
               <form onSubmit={handleSearchSubmit}>
                 <span
@@ -153,7 +140,6 @@ export default function Header() {
                 />
               </form>
 
-              {/* CUADRO DE SUGERENCIAS */}
               {showDropdown && (
                 <div className="absolute top-full mt-2 w-full bg-white border border-[#bec9c2]/30 rounded-xl shadow-2xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-2">
                   {isSearching ? (
@@ -168,9 +154,7 @@ export default function Header() {
                       {sugerencias.map((prod) => (
                         <li key={prod.id}>
                           <button
-                            // 🟢 PASAMOS EL OBJETO COMPLETO, NO SOLO EL ID
                             onClick={() => abrirModalProducto(prod)}
-                            // 🟢 AGREGAMOS CURSOR-POINTER Y MEJOR HOVER
                             className="w-full flex items-center gap-3 p-3 hover:bg-[#e2e7ff] transition-colors text-left border-b border-[#bec9c2]/10 last:border-0 cursor-pointer group"
                           >
                             <img
@@ -217,22 +201,56 @@ export default function Header() {
                 </div>
               )}
             </div>
+
+            <button
+              onClick={() => setIsCartOpen(true)}
+              className="relative p-2 text-[#131b2e] hover:bg-[#f2f3ff] rounded-full transition-colors cursor-pointer"
+            >
+              <span
+                className="material-symbols-outlined"
+                style={{ fontSize: "28px" }}
+              >
+                shopping_cart
+              </span>
+              {totalItems > 0 && (
+                <span className="absolute top-0 right-0 bg-[#004532] text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full border-2 border-white">
+                  {totalItems}
+                </span>
+              )}
+            </button>
           </div>
 
-          <button
-            className="md:hidden z-50 text-[#131b2e] p-2"
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          >
-            <span
-              className="material-symbols-outlined"
-              style={{ fontSize: "28px" }}
+          <div className="md:hidden flex items-center gap-1">
+            <button
+              onClick={() => setIsCartOpen(true)}
+              className="relative p-2 text-[#131b2e] cursor-pointer z-50"
             >
-              {isMobileMenuOpen ? "close" : "menu"}
-            </span>
-          </button>
+              <span
+                className="material-symbols-outlined"
+                style={{ fontSize: "28px" }}
+              >
+                shopping_cart
+              </span>
+              {totalItems > 0 && (
+                <span className="absolute top-0 right-0 bg-[#004532] text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full border-2 border-white">
+                  {totalItems}
+                </span>
+              )}
+            </button>
+            <button
+              className="z-50 text-[#131b2e] p-2"
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            >
+              <span
+                className="material-symbols-outlined"
+                style={{ fontSize: "28px" }}
+              >
+                {isMobileMenuOpen ? "close" : "menu"}
+              </span>
+            </button>
+          </div>
         </div>
 
-        {/* MENÚ MÓVIL */}
         <div
           className={`fixed inset-0 bg-white z-30 pt-20 px-6 flex flex-col gap-6 md:hidden transition-transform duration-300 ease-in-out ${isMobileMenuOpen ? "translate-x-0" : "translate-x-full"}`}
         >
@@ -263,7 +281,6 @@ export default function Header() {
         </div>
       </header>
 
-      {/* RENDERIZAMOS EL MODAL AQUÍ */}
       <ProductDetailModal
         producto={productoSeleccionado}
         isOpen={isModalOpen}

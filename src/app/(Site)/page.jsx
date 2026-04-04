@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { supabase } from "../_lib/supabase/supabase";
 import MainProducts from "../_components/MainProducts";
+import { ArrowRight, Headphones, Laptop, Bot } from "lucide-react"; // 🟢 Importamos los íconos
 
 export const revalidate = 0;
 
@@ -141,12 +142,8 @@ export default async function Home() {
               className="text-[#004532] font-bold text-xs uppercase tracking-widest flex items-center gap-2 hover:translate-x-1 transition-transform"
             >
               Ver todo
-              <span
-                className="material-symbols-outlined text-sm"
-                style={{ fontSize: "16px" }}
-              >
-                arrow_forward
-              </span>
+              {/* 🟢 Ícono Lucide */}
+              <ArrowRight size={16} />
             </Link>
           </div>
 
@@ -154,12 +151,8 @@ export default async function Home() {
             {/* Card 1 */}
             <div className="group relative bg-white border border-[#bec9c2]/10 p-10 h-[320px] flex flex-col justify-end hover:shadow-xl transition-all duration-300">
               <div className="absolute top-10 left-10 text-[#004532] group-hover:scale-110 transition-transform">
-                <span
-                  className="material-symbols-outlined"
-                  style={{ fontSize: "40px" }}
-                >
-                  headphones
-                </span>
+                {/* 🟢 Ícono Lucide */}
+                <Headphones size={40} strokeWidth={1.5} />
               </div>
               <div className="z-10">
                 <h3 className="text-2xl font-black text-[#131b2e] uppercase tracking-tight">
@@ -169,25 +162,17 @@ export default async function Home() {
                   Personaliza tu espacio
                 </p>
               </div>
-              <div className="absolute -right-4 -bottom-4 opacity-[0.03] group-hover:opacity-[0.06] transition-opacity">
-                <span
-                  className="material-symbols-outlined"
-                  style={{ fontSize: "180px" }}
-                >
-                  headphones
-                </span>
+              <div className="absolute -right-4 -bottom-4 opacity-[0.03] group-hover:opacity-[0.06] transition-opacity text-[#131b2e]">
+                {/* 🟢 Ícono Lucide de fondo */}
+                <Headphones size={180} strokeWidth={1} />
               </div>
             </div>
 
             {/* Card 2 - Primary */}
             <div className="group relative bg-[#065f46] p-10 h-[320px] flex flex-col justify-end hover:shadow-xl transition-all duration-300">
               <div className="absolute top-10 left-10 text-white group-hover:scale-110 transition-transform">
-                <span
-                  className="material-symbols-outlined"
-                  style={{ fontSize: "40px" }}
-                >
-                  laptop_mac
-                </span>
+                {/* 🟢 Ícono Lucide */}
+                <Laptop size={40} strokeWidth={1.5} />
               </div>
               <div className="z-10">
                 <h3 className="text-2xl font-black text-white uppercase tracking-tight">
@@ -197,25 +182,17 @@ export default async function Home() {
                   Poder sin límites
                 </p>
               </div>
-              <div className="absolute -right-4 -bottom-4 opacity-10">
-                <span
-                  className="material-symbols-outlined text-white"
-                  style={{ fontSize: "180px" }}
-                >
-                  laptop_mac
-                </span>
+              <div className="absolute -right-4 -bottom-4 opacity-10 text-white">
+                {/* 🟢 Ícono Lucide de fondo */}
+                <Laptop size={180} strokeWidth={1} />
               </div>
             </div>
 
             {/* Card 3 */}
             <div className="group relative bg-white border border-[#bec9c2]/10 p-10 h-[320px] flex flex-col justify-end hover:shadow-xl transition-all duration-300">
               <div className="absolute top-10 left-10 text-[#004532] group-hover:scale-110 transition-transform">
-                <span
-                  className="material-symbols-outlined"
-                  style={{ fontSize: "40px" }}
-                >
-                  smart_toy
-                </span>
+                {/* 🟢 Ícono Lucide */}
+                <Bot size={40} strokeWidth={1.5} />
               </div>
               <div className="z-10">
                 <h3 className="text-2xl font-black text-[#131b2e] uppercase tracking-tight">
@@ -225,13 +202,9 @@ export default async function Home() {
                   Futuro en tus manos
                 </p>
               </div>
-              <div className="absolute -right-4 -bottom-4 opacity-[0.03] group-hover:opacity-[0.06] transition-opacity">
-                <span
-                  className="material-symbols-outlined"
-                  style={{ fontSize: "180px" }}
-                >
-                  smart_toy
-                </span>
+              <div className="absolute -right-4 -bottom-4 opacity-[0.03] group-hover:opacity-[0.06] transition-opacity text-[#131b2e]">
+                {/* 🟢 Ícono Lucide de fondo */}
+                <Bot size={180} strokeWidth={1} />
               </div>
             </div>
           </div>
@@ -273,12 +246,8 @@ export default async function Home() {
               className="inline-flex items-center gap-2 mt-10 border border-white/20 text-white px-8 py-3 font-bold text-xs tracking-widest uppercase hover:bg-white hover:text-[#131b2e] transition-all"
             >
               Conoce más
-              <span
-                className="material-symbols-outlined"
-                style={{ fontSize: "16px" }}
-              >
-                arrow_forward
-              </span>
+              {/* 🟢 Ícono Lucide */}
+              <ArrowRight size={16} />
             </Link>
           </div>
 

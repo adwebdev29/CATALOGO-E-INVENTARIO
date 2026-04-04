@@ -2,20 +2,20 @@
 import { useState } from "react";
 import Image from "next/image";
 import ProductDetailModal from "./ProductDetailModal";
+import { useCart } from "@/app/_context/CartContext";
+// 🟢 Importamos los íconos de Lucide
+import { ZoomIn, ShoppingCart, Eye, MessageCircle } from "lucide-react";
 
 export default function ProductCard({ producto, main = true }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const { addToCart } = useCart();
 
-  // Fallback seguro por si no hay imagen
   const imageUrl =
     producto.imagen_url || producto.imagen || "https://via.placeholder.com/300";
 
-  // Función temporal para el carrito
   const handleAgregarCarrito = (e) => {
-    e.stopPropagation(); // Evita que se abra el modal al dar clic en agregar
-    alert(
-      `🛒 "${producto.nombre}" agregado al carrito.\n(Pronto conectaremos esto a tu estado global)`,
-    );
+    e.stopPropagation();
+    addToCart(producto);
   };
 
   return (
@@ -27,7 +27,6 @@ export default function ProductCard({ producto, main = true }) {
             : "h-full group flex flex-col bg-white overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 border border-[#bec9c2]/20 rounded-xl"
         }
       >
-        {/* 🟢 IMAGEN */}
         <div
           className="relative w-full h-36 sm:h-56 overflow-hidden bg-white flex items-center justify-center cursor-pointer border-b border-[#bec9c2]/10"
           onClick={() => setIsModalOpen(true)}
@@ -41,12 +40,10 @@ export default function ProductCard({ producto, main = true }) {
           />
 
           <div className="absolute inset-0 bg-[#131b2e]/0 group-hover:bg-[#131b2e]/5 transition-colors duration-300 flex items-center justify-center">
-            <span
-              className="material-symbols-outlined text-[#131b2e] opacity-0 group-hover:opacity-100 transition-opacity duration-300 drop-shadow-md bg-white/80 rounded-full p-2"
-              style={{ fontSize: "24px" }}
-            >
-              zoom_in
-            </span>
+            {/* 🟢 Ícono Lucide */}
+            <div className="text-[#131b2e] opacity-0 group-hover:opacity-100 transition-opacity duration-300 drop-shadow-md bg-white/80 rounded-full p-2 flex items-center justify-center">
+              <ZoomIn size={24} strokeWidth={1.5} />
+            </div>
           </div>
 
           {producto.stock <= 5 && producto.stock > 0 && (
@@ -56,9 +53,7 @@ export default function ProductCard({ producto, main = true }) {
           )}
         </div>
 
-        {/* 🟢 CONTENIDO */}
         <div className="p-3 sm:p-5 flex flex-col flex-1">
-          {/* MARCA, CATEGORÍA Y PRECIO */}
           <div className="flex justify-between items-start mb-2 gap-2">
             <div className="flex items-center gap-1.5 overflow-hidden">
               {producto.marca && (
@@ -70,13 +65,11 @@ export default function ProductCard({ producto, main = true }) {
                 {producto.categoria}
               </span>
             </div>
-
             <span className="text-sm sm:text-lg font-black text-[#131b2e] shrink-0">
               ${Number(producto.precio)?.toLocaleString()}
             </span>
           </div>
 
-          {/* Título */}
           <h3
             className="text-xs sm:text-lg font-bold tracking-tight text-[#131b2e] mb-3 uppercase line-clamp-2 cursor-pointer hover:text-[#004532] transition-colors"
             onClick={() => setIsModalOpen(true)}
@@ -88,40 +81,34 @@ export default function ProductCard({ producto, main = true }) {
             {producto.descripcion}
           </p>
 
-          {/* 🟢 BOTONES REORGANIZADOS */}
           <div className="mt-auto flex flex-col gap-2">
-            {/* Botón Principal: Agregar al Carrito */}
             <button
               onClick={handleAgregarCarrito}
               className="w-full py-2 sm:py-2.5 bg-[#004532] text-white font-bold rounded-lg flex items-center justify-center gap-1.5 hover:bg-[#065f46] transition-colors text-[10px] sm:text-xs tracking-widest uppercase shadow-sm"
             >
-              <span className="material-symbols-outlined text-[14px] sm:text-[16px]">
-                shopping_cart
-              </span>
+              {/* 🟢 Ícono Lucide */}
+              <ShoppingCart size={16} strokeWidth={2} />
               Al Carrito
             </button>
 
-            {/* Fila Dividida: Detalles | WhatsApp */}
             <div className="grid grid-cols-2 gap-2">
               <button
                 onClick={() => setIsModalOpen(true)}
                 className="w-full py-2 bg-white text-[#131b2e] border border-[#bec9c2]/50 font-bold rounded-lg flex items-center justify-center gap-1 hover:bg-[#f2f3ff] transition-colors text-[9px] sm:text-[10px] tracking-widest uppercase shadow-sm"
               >
-                <span className="material-symbols-outlined text-[12px] sm:text-[14px]">
-                  visibility
-                </span>
+                {/* 🟢 Ícono Lucide */}
+                <Eye size={14} strokeWidth={2} />
                 Detalles
               </button>
 
               <a
-                href={`https://wa.me/525512345678?text=Hola, me interesa el producto: ${encodeURIComponent(producto.nombre)}`}
+                href={`https://wa.me/525564246246?text=Hola, me interesa el producto: ${encodeURIComponent(producto.nombre)}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-full py-2 bg-[#131b2e] text-white font-bold rounded-lg flex items-center justify-center gap-1 hover:bg-[#1e293b] transition-colors text-[9px] sm:text-[10px] tracking-widest uppercase shadow-sm"
               >
-                <span className="material-symbols-outlined text-[12px] sm:text-[14px]">
-                  chat
-                </span>
+                {/* 🟢 Ícono Lucide */}
+                <MessageCircle size={14} strokeWidth={2} />
                 WhatsApp
               </a>
             </div>
