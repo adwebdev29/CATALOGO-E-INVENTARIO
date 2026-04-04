@@ -1,7 +1,8 @@
 import Link from "next/link";
-import { supabase } from "../_lib/supabase/supabase";
-import MainProducts from "../_components/MainProducts";
-import { ArrowRight, Headphones, Laptop, Bot } from "lucide-react"; // 🟢 Importamos los íconos
+import { supabase } from "@/app/_lib/supabase/supabase";
+import MainProducts from "@/app/_components/MainProducts";
+// 🟢 Importamos iconos de Lucide para iterarlos en las categorías dinámicas
+import { ArrowRight, Headphones, Laptop, Bot, Zap, Box } from "lucide-react";
 
 export const revalidate = 0;
 
@@ -41,15 +42,52 @@ const STATIC_PRODUCTS = [
   },
 ];
 
+// 🟢 MAPA DE ESTILOS DINÁMICOS PARA LAS CATEGORÍAS
+// Rotaremos entre estos estilos para las categorías que vengan de la base de datos
+const CATEGORY_STYLES = [
+  {
+    bgClass: "bg-white border border-[#bec9c2]/10",
+    titleClass: "text-[#131b2e]",
+    subClass: "text-[#004532]",
+    iconColor: "text-[#004532]",
+    bgIconColor: "text-[#131b2e]",
+    Icon: Headphones,
+  },
+  {
+    bgClass: "bg-[#065f46]",
+    titleClass: "text-white",
+    subClass: "text-white/80",
+    iconColor: "text-white",
+    bgIconColor: "text-white",
+    Icon: Laptop,
+  },
+  {
+    bgClass: "bg-white border border-[#bec9c2]/10",
+    titleClass: "text-[#131b2e]",
+    subClass: "text-[#004532]",
+    iconColor: "text-[#004532]",
+    bgIconColor: "text-[#131b2e]",
+    Icon: Bot,
+  },
+  {
+    bgClass: "bg-[#131b2e]",
+    titleClass: "text-white",
+    subClass: "text-[#8bd6b6]",
+    iconColor: "text-[#8bd6b6]",
+    bgIconColor: "text-white",
+    Icon: Zap,
+  },
+];
+
 export default async function Home() {
-  // Fetch featured products from Supabase
-  const { data } = await supabase
+  // 1. Fetch de productos destacados
+  const { data: dataProductos } = await supabase
     .from("productos")
     .select("*")
     .eq("destacado", true);
 
   const productosDestacados =
-    data?.map((p) => {
+    dataProductos?.map((p) => {
       const urlValida =
         p.imagen_url &&
         (p.imagen_url.startsWith("http") || p.imagen_url.startsWith("/"));
@@ -63,13 +101,22 @@ export default async function Home() {
       };
     }) || [];
 
-  // Use DB products if available, else static placeholders
   const displayProducts =
     productosDestacados.length > 0 ? productosDestacados : STATIC_PRODUCTS;
 
+  // 🟢 2. FETCH ESTRICTO DE CATEGORÍAS POPULARES
+  // Solo traerá las que en BD tengan "popular = true"
+  const { data: categoriasPopulares } = await supabase
+    .from("categorias")
+    .select("nombre")
+    .eq("popular", true)
+    .limit(6);
+
+  const displayCategorias = categoriasPopulares || [];
+
   return (
     <main className="pt-16">
-      {/* ── HERO ── */}
+      {/* ── HERO (CON TUS IMÁGENES Y TEXTOS ORIGINALES) ── */}
       <section className="relative px-8 py-20 md:py-32 bg-white overflow-hidden border-b border-[#bec9c2]/10">
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
           <div className="z-10 architectural-border pl-8">
@@ -125,7 +172,7 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* ── CATEGORIES ── */}
+      {/* ── CATEGORIES (100% DINÁMICAS DESDE SUPABASE) ── */}
       <section className="px-8 py-24 bg-[#f2f3ff]">
         <div className="max-w-7xl mx-auto">
           <div className="flex justify-between items-end mb-12 architectural-border pl-6">
@@ -142,79 +189,62 @@ export default async function Home() {
               className="text-[#004532] font-bold text-xs uppercase tracking-widest flex items-center gap-2 hover:translate-x-1 transition-transform"
             >
               Ver todo
-              {/* 🟢 Ícono Lucide */}
               <ArrowRight size={16} />
             </Link>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Card 1 */}
-            <div className="group relative bg-white border border-[#bec9c2]/10 p-10 h-[320px] flex flex-col justify-end hover:shadow-xl transition-all duration-300">
-              <div className="absolute top-10 left-10 text-[#004532] group-hover:scale-110 transition-transform">
-                {/* 🟢 Ícono Lucide */}
-                <Headphones size={40} strokeWidth={1.5} />
-              </div>
-              <div className="z-10">
-                <h3 className="text-2xl font-black text-[#131b2e] uppercase tracking-tight">
-                  Accessories
-                </h3>
-                <p className="text-[10px] font-bold text-[#004532] uppercase tracking-widest mt-2">
-                  Personaliza tu espacio
-                </p>
-              </div>
-              <div className="absolute -right-4 -bottom-4 opacity-[0.03] group-hover:opacity-[0.06] transition-opacity text-[#131b2e]">
-                {/* 🟢 Ícono Lucide de fondo */}
-                <Headphones size={180} strokeWidth={1} />
-              </div>
-            </div>
+          {/* 🟢 DIBUJAMOS SOLO LAS CATEGORÍAS QUE VIENEN DE LA BASE DE DATOS */}
+          {displayCategorias.length === 0 ? (
+            <p className="text-slate-500 text-sm font-medium">
+              No hay categorías populares marcadas en la base de datos todavía.
+            </p>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {displayCategorias.map((cat, index) => {
+                // Asignamos el estilo e ícono rotando sobre el arreglo CATEGORY_STYLES
+                const style = CATEGORY_STYLES[index % CATEGORY_STYLES.length];
+                const IconComponent = style.Icon;
 
-            {/* Card 2 - Primary */}
-            <div className="group relative bg-[#065f46] p-10 h-[320px] flex flex-col justify-end hover:shadow-xl transition-all duration-300">
-              <div className="absolute top-10 left-10 text-white group-hover:scale-110 transition-transform">
-                {/* 🟢 Ícono Lucide */}
-                <Laptop size={40} strokeWidth={1.5} />
-              </div>
-              <div className="z-10">
-                <h3 className="text-2xl font-black text-white uppercase tracking-tight">
-                  Computers
-                </h3>
-                <p className="text-[10px] font-bold text-white/80 uppercase tracking-widest mt-2">
-                  Poder sin límites
-                </p>
-              </div>
-              <div className="absolute -right-4 -bottom-4 opacity-10 text-white">
-                {/* 🟢 Ícono Lucide de fondo */}
-                <Laptop size={180} strokeWidth={1} />
-              </div>
+                return (
+                  <Link
+                    key={cat.nombre}
+                    href={`/catalogo?categoria=${encodeURIComponent(cat.nombre)}`}
+                    className={`group relative ${style.bgClass} p-10 h-[320px] flex flex-col justify-end hover:shadow-xl transition-all duration-300 rounded-xl cursor-pointer overflow-hidden`}
+                  >
+                    <div
+                      className={`absolute top-10 left-10 ${style.iconColor} group-hover:scale-110 transition-transform`}
+                    >
+                      <IconComponent size={40} strokeWidth={1.5} />
+                    </div>
+                    <div className="z-10">
+                      <h3
+                        className={`text-2xl font-black ${style.titleClass} uppercase tracking-tight`}
+                      >
+                        {cat.nombre}
+                      </h3>
+                      <p
+                        className={`text-[10px] font-bold ${style.subClass} uppercase tracking-widest mt-2`}
+                      >
+                        Explorar catálogo
+                      </p>
+                    </div>
+                    <div
+                      className={`absolute -right-4 -bottom-4 opacity-[0.03] group-hover:opacity-[0.06] transition-opacity ${style.bgIconColor}`}
+                    >
+                      <IconComponent size={180} strokeWidth={1} />
+                    </div>
+                  </Link>
+                );
+              })}
             </div>
-
-            {/* Card 3 */}
-            <div className="group relative bg-white border border-[#bec9c2]/10 p-10 h-[320px] flex flex-col justify-end hover:shadow-xl transition-all duration-300">
-              <div className="absolute top-10 left-10 text-[#004532] group-hover:scale-110 transition-transform">
-                {/* 🟢 Ícono Lucide */}
-                <Bot size={40} strokeWidth={1.5} />
-              </div>
-              <div className="z-10">
-                <h3 className="text-2xl font-black text-[#131b2e] uppercase tracking-tight">
-                  Gadgets
-                </h3>
-                <p className="text-[10px] font-bold text-[#004532] uppercase tracking-widest mt-2">
-                  Futuro en tus manos
-                </p>
-              </div>
-              <div className="absolute -right-4 -bottom-4 opacity-[0.03] group-hover:opacity-[0.06] transition-opacity text-[#131b2e]">
-                {/* 🟢 Ícono Lucide de fondo */}
-                <Bot size={180} strokeWidth={1} />
-              </div>
-            </div>
-          </div>
+          )}
         </div>
       </section>
 
       {/* ── FEATURED PRODUCTS SLIDER ── */}
       <MainProducts productosDestacados={displayProducts} />
 
-      {/* ── ABOUT ── */}
+      {/* ── ABOUT (CON TU IMAGEN ORIGINAL) ── */}
       <section className="px-8 py-32 bg-[#131b2e] text-white overflow-hidden relative border-t border-white/5">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center gap-20 relative z-10">
           <div className="flex-1 architectural-border pl-10 border-[#004532]">
@@ -246,7 +276,6 @@ export default async function Home() {
               className="inline-flex items-center gap-2 mt-10 border border-white/20 text-white px-8 py-3 font-bold text-xs tracking-widest uppercase hover:bg-white hover:text-[#131b2e] transition-all"
             >
               Conoce más
-              {/* 🟢 Ícono Lucide */}
               <ArrowRight size={16} />
             </Link>
           </div>
