@@ -2,21 +2,48 @@
 import { useState } from "react";
 import Image from "next/image";
 import ProductDetailModal from "./ProductDetailModal";
-import { useCart } from "@/app/_context/CartContext";
-// 🟢 Importamos los íconos de Lucide
+import { useCart } from "../_context/CartContext";
 import { ZoomIn, ShoppingCart, Eye, MessageCircle } from "lucide-react";
 
 export default function ProductCard({ producto, main = true }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { addToCart } = useCart();
 
+  // 🟢 ESTADO PARA LA VARIANTE EN LA TARJETA
+  const [opcionSeleccionada, setOpcionSeleccionada] = useState(1);
+
   const imageUrl =
     producto.imagen_url || producto.imagen || "https://via.placeholder.com/300";
 
+  // 🟢 DETERMINAR PRECIO ACTUAL SEGÚN SELECCIÓN
+  const precioActual =
+    opcionSeleccionada === 1
+      ? producto.precio
+      : opcionSeleccionada === 2
+        ? producto.precio_2
+        : producto.precio_3;
+
+  const etiquetaActual =
+    opcionSeleccionada === 1
+      ? producto.etiqueta_1 || "1 Pieza"
+      : opcionSeleccionada === 2
+        ? producto.etiqueta_2
+        : producto.etiqueta_3;
+
   const handleAgregarCarrito = (e) => {
     e.stopPropagation();
-    addToCart(producto);
+    const productoParaCarrito = {
+      ...producto,
+      id: `${producto.id}-${opcionSeleccionada}`,
+      nombre: `${producto.nombre} (${etiquetaActual})`,
+      precio: precioActual,
+      varianteSeleccionada: opcionSeleccionada, // 🟢 Guardamos qué variante es
+    };
+    addToCart(productoParaCarrito);
   };
+
+  // ¿Tiene variantes?
+  const tieneVariantes = producto.precio_2 || producto.precio_3;
 
   return (
     <>
@@ -38,14 +65,11 @@ export default function ProductCard({ producto, main = true }) {
             sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
             className="object-contain p-2 sm:p-4 group-hover:scale-105 transition-transform duration-500"
           />
-
           <div className="absolute inset-0 bg-[#131b2e]/0 group-hover:bg-[#131b2e]/5 transition-colors duration-300 flex items-center justify-center">
-            {/* 🟢 Ícono Lucide */}
             <div className="text-[#131b2e] opacity-0 group-hover:opacity-100 transition-opacity duration-300 drop-shadow-md bg-white/80 rounded-full p-2 flex items-center justify-center">
               <ZoomIn size={24} strokeWidth={1.5} />
             </div>
           </div>
-
           {producto.stock <= 5 && producto.stock > 0 && (
             <div className="absolute top-2 right-2 sm:top-4 sm:right-4 bg-red-600 text-white text-[8px] sm:text-[10px] font-bold px-2 py-1 uppercase tracking-widest shadow-md rounded-sm">
               ¡Últimas!
@@ -65,8 +89,9 @@ export default function ProductCard({ producto, main = true }) {
                 {producto.categoria}
               </span>
             </div>
+            {/* 🟢 EL PRECIO SE ACTUALIZA DINÁMICAMENTE */}
             <span className="text-sm sm:text-lg font-black text-[#131b2e] shrink-0">
-              ${Number(producto.precio)?.toLocaleString()}
+              ${Number(precioActual)?.toLocaleString()}
             </span>
           </div>
 
@@ -82,11 +107,28 @@ export default function ProductCard({ producto, main = true }) {
           </p>
 
           <div className="mt-auto flex flex-col gap-2">
+            {/* 🟢 NUEVO SELECT DE VARIANTES (Si aplica) */}
+            {tieneVariantes && (
+              <select
+                value={opcionSeleccionada}
+                onChange={(e) => setOpcionSeleccionada(Number(e.target.value))}
+                onClick={(e) => e.stopPropagation()} // Evita que abra el modal al dar clic
+                className="w-full bg-[#f2f3ff] text-[#131b2e] border border-[#bec9c2]/40 text-[10px] sm:text-xs font-bold rounded-lg p-2 focus:outline-none focus:ring-1 focus:ring-[#004532]"
+              >
+                <option value={1}>{producto.etiqueta_1 || "1 Pieza"}</option>
+                {producto.precio_2 && (
+                  <option value={2}>{producto.etiqueta_2}</option>
+                )}
+                {producto.precio_3 && (
+                  <option value={3}>{producto.etiqueta_3}</option>
+                )}
+              </select>
+            )}
+
             <button
               onClick={handleAgregarCarrito}
               className="w-full py-2 sm:py-2.5 bg-[#004532] text-white font-bold rounded-lg flex items-center justify-center gap-1.5 hover:bg-[#065f46] transition-colors text-[10px] sm:text-xs tracking-widest uppercase shadow-sm"
             >
-              {/* 🟢 Ícono Lucide */}
               <ShoppingCart size={16} strokeWidth={2} />
               Al Carrito
             </button>
@@ -96,20 +138,15 @@ export default function ProductCard({ producto, main = true }) {
                 onClick={() => setIsModalOpen(true)}
                 className="w-full py-2 bg-white text-[#131b2e] border border-[#bec9c2]/50 font-bold rounded-lg flex items-center justify-center gap-1 hover:bg-[#f2f3ff] transition-colors text-[9px] sm:text-[10px] tracking-widest uppercase shadow-sm"
               >
-                {/* 🟢 Ícono Lucide */}
-                <Eye size={14} strokeWidth={2} />
-                Detalles
+                <Eye size={14} strokeWidth={2} /> Detalles
               </button>
-
               <a
-                href={`https://wa.me/525554946246?text=Hola, me interesa el producto: ${encodeURIComponent(producto.nombre)}`}
+                href={`https://wa.me/525554946246?text=Hola, me interesa: ${encodeURIComponent(producto.nombre)} (${etiquetaActual}) por $${precioActual}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-full py-2 bg-[#131b2e] text-white font-bold rounded-lg flex items-center justify-center gap-1 hover:bg-[#1e293b] transition-colors text-[9px] sm:text-[10px] tracking-widest uppercase shadow-sm"
               >
-                {/* 🟢 Ícono Lucide */}
-                <MessageCircle size={14} strokeWidth={2} />
-                WhatsApp
+                <MessageCircle size={14} strokeWidth={2} /> WhatsApp
               </a>
             </div>
           </div>

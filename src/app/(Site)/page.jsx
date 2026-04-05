@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { supabase } from "@/app/_lib/supabase/supabase";
-import MainProducts from "@/app/_components/MainProducts";
+import { supabase } from "../_lib/supabase/supabase";
+import MainProducts from "../_components/MainProducts";
 // 🟢 Importamos iconos de Lucide para iterarlos en las categorías dinámicas
 import { ArrowRight, Headphones, Laptop, Bot, Zap, Box } from "lucide-react";
 
@@ -10,35 +10,29 @@ export const revalidate = 0;
 const STATIC_PRODUCTS = [
   {
     id: "s1",
-    nombre: "Teclado Mecánico V2",
-    categoria: "Keychron",
-    precio: 149,
+    nombre: "Bomba de Aceite PRO",
+    categoria: "Bombas",
+    precio: 1450,
+    etiqueta_1: "1 Pieza",
+    precio_2: 1300,
+    etiqueta_2: "Caja 10 Pzas",
     imagen:
       "https://lh3.googleusercontent.com/aida-public/AB6AXuAVU3WncA2w4r3SH7RtbDoaoAn9Q-79gCiEg5v_C7uM7PlUWiwKTf-pONYEVvvn9dR9s4ROLaLiiEHbbhsS7ad-XiKPNrNhLrvJwwVqyDVDEuV26u2FClcKMCJkmWsE7qBqffLiNXdm-1KRUX4TxGdilxmJ6c8xXv9kqFo5DQqWjQauim7betgRGQGyGno5ZPXKWWJBYsglfPz97WGigzOzTBYyRs7d0Q_M_lLxsy_jS3s1dL_WWSgVylnz5eClm7HWYpAFXtnR7Ple",
+    stock: 20,
   },
   {
     id: "s2",
-    nombre: "MacBook Air M3",
-    categoria: "Apple",
-    precio: 1099,
+    nombre: "Carrete Industrial 15m",
+    categoria: "Carretes",
+    precio: 2100,
+    etiqueta_1: "Individual",
+    precio_2: 1950,
+    etiqueta_2: "Mayoreo (5+)",
+    precio_3: 1800,
+    etiqueta_3: "Distribuidor",
     imagen:
       "https://lh3.googleusercontent.com/aida-public/AB6AXuAM7P0TdPNW9jgTur9NmrITscnf1oiPFReVMppUjQEnu9pGPbEy59rcnEd0u-1SFnT-KHyYkJdS5iEbyprwlukBR4_URg2i8bGIUIANPCdPC4L9MU9dbQUlCa6Or5jig4cIakdA_0QG551Z9ypbT_jLQ2H0_VRUXVwLgGGi8aLco7EEfc0Ab_rBlmU58s34QuBwdlWx34BbpbBWrdkycUHo_-VXJJ09qeBAfzbn2TZqaWGgJRBFQiH1hMnUK75X3U8p1ie5iu_pYZoc",
-  },
-  {
-    id: "s3",
-    nombre: "Galaxy Watch 6",
-    categoria: "Samsung",
-    precio: 299,
-    imagen:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuAMXQkUe5JemSJ2jNXxJaepZHZndrGfozbTibeFi3zqAq6Akr1qElqeoqsu3miTzXIVgt8xbwAQixYn5jX9bgJ3ew5HCCYt3DTBQq_DRppTksEr2cy7pGwS3C8Qtn09BZIBAjYVNA2p7YclMTk5a2vPvhfP_2W-MISg8wX44mL4kal1kP8b2GCE2mM1MCueX4IpDIGOFnlKYQaP5GNclsScdlTKtxOvUqtAikMpRbw2xBCTX284q5I0Ig8G68UNv5n3Y5Emv3vCmWv",
-  },
-  {
-    id: "s4",
-    nombre: "Funda de Cuero Pro",
-    categoria: "Nomad",
-    precio: 45,
-    imagen:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuDVYWI03VHCfPqzTSuY548_TiQm1trPd5ZAuYL84BFiiiJwk8-uwAnAUBQ0MqiCmsTdow1v4xk-OhQIYEqfOMkmMdxY1HW9248bNIVIypvODC1yETmyQKF1v6CLItL_gYDT_D12R9AfHETLwq9to9QA8B46Z0dbxoB-UVQ_L-p4exnggBJ5Lh2N5RCBAbUnu37oAgfa5azSWlUFpr6jCsJztZwIavZ9L3mm1GGUrMhk8GScgfHNIuR4QyHi6ZqRETko_zk4KZg39dNk",
+    stock: 15,
   },
 ];
 
@@ -98,6 +92,13 @@ export default async function Home() {
         descripcion: p.descripcion,
         precio: p.precio,
         imagen: urlValida ? p.imagen_url : "https://via.placeholder.com/300",
+        // 🟢 AQUÍ ESTÁ LA CORRECCIÓN: Agregamos todas las variantes para que la tarjeta las lea
+        etiqueta_1: p.etiqueta_1,
+        etiqueta_2: p.etiqueta_2,
+        precio_2: p.precio_2,
+        etiqueta_3: p.etiqueta_3,
+        precio_3: p.precio_3,
+        stock: p.stock,
       };
     }) || [];
 

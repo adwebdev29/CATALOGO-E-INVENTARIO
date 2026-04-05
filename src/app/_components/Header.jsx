@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/app/_lib/supabase/supabase";
 import ProductDetailModal from "./ProductDetailModal";
 import { useCart } from "@/app/_context/CartContext";
+// 🟢 Importamos los íconos de Lucide
+import { Search, SearchX, ShoppingCart, Menu, X, Loader2 } from "lucide-react";
 
 export default function Header() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -97,9 +99,8 @@ export default function Header() {
             <Image
               src="/img/logo-woox.webp"
               alt="WOOX Logo"
-              width={180} // Le dimos más caja de referencia
+              width={180}
               height={60}
-              // 🟢 AQUÍ ESTÁ LA MAGIA: h-10 en móvil (40px) y h-12 en PC (48px)
               className="h-10 sm:h-14 w-auto object-contain"
               priority
             />
@@ -120,12 +121,11 @@ export default function Header() {
 
             <div className="relative w-full max-w-xs">
               <form onSubmit={handleSearchSubmit}>
-                <span
-                  className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#bec9c2]"
-                  style={{ fontSize: "18px" }}
-                >
-                  search
-                </span>
+                {/* 🟢 Ícono de Lupa (PC) */}
+                <Search
+                  size={18}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-[#bec9c2]"
+                />
                 <input
                   type="text"
                   placeholder="Buscar productos..."
@@ -143,7 +143,11 @@ export default function Header() {
                 <div className="absolute top-full mt-2 w-full bg-white border border-[#bec9c2]/30 rounded-xl shadow-2xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-2">
                   {isSearching ? (
                     <div className="p-4 text-center flex flex-col items-center justify-center gap-2">
-                      <div className="w-5 h-5 border-2 border-[#004532] border-t-transparent rounded-full animate-spin"></div>
+                      {/* 🟢 Loader de Lucide */}
+                      <Loader2
+                        size={20}
+                        className="text-[#004532] animate-spin"
+                      />
                       <span className="text-xs text-[#3f4944] font-bold uppercase tracking-widest">
                         Buscando...
                       </span>
@@ -185,13 +189,9 @@ export default function Header() {
                       </li>
                     </ul>
                   ) : (
-                    <div className="p-6 text-center">
-                      <span
-                        className="material-symbols-outlined text-[#bec9c2] mb-2"
-                        style={{ fontSize: "32px" }}
-                      >
-                        search_off
-                      </span>
+                    <div className="p-6 text-center flex flex-col items-center">
+                      {/* 🟢 Ícono de Sin Resultados */}
+                      <SearchX size={32} className="text-[#bec9c2] mb-2" />
                       <p className="text-sm text-[#131b2e] font-bold">
                         No hay coincidencias
                       </p>
@@ -201,16 +201,12 @@ export default function Header() {
               )}
             </div>
 
+            {/* 🟢 Ícono del Carrito (PC) */}
             <button
               onClick={() => setIsCartOpen(true)}
               className="relative p-2 text-[#131b2e] hover:bg-[#f2f3ff] rounded-full transition-colors cursor-pointer"
             >
-              <span
-                className="material-symbols-outlined"
-                style={{ fontSize: "28px" }}
-              >
-                shopping_cart
-              </span>
+              <ShoppingCart size={24} />
               {totalItems > 0 && (
                 <span className="absolute top-0 right-0 bg-[#004532] text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full border-2 border-white">
                   {totalItems}
@@ -220,32 +216,24 @@ export default function Header() {
           </div>
 
           <div className="md:hidden flex items-center gap-1">
+            {/* 🟢 Ícono del Carrito (Móvil) */}
             <button
               onClick={() => setIsCartOpen(true)}
               className="relative p-2 text-[#131b2e] cursor-pointer z-50"
             >
-              <span
-                className="material-symbols-outlined"
-                style={{ fontSize: "28px" }}
-              >
-                shopping_cart
-              </span>
+              <ShoppingCart size={24} />
               {totalItems > 0 && (
                 <span className="absolute top-0 right-0 bg-[#004532] text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full border-2 border-white">
                   {totalItems}
                 </span>
               )}
             </button>
+            {/* 🟢 Ícono del Menú/Cerrar (Móvil) */}
             <button
               className="z-50 text-[#131b2e] p-2"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             >
-              <span
-                className="material-symbols-outlined"
-                style={{ fontSize: "28px" }}
-              >
-                {isMobileMenuOpen ? "close" : "menu"}
-              </span>
+              {isMobileMenuOpen ? <X size={28} /> : <Menu size={28} />}
             </button>
           </div>
         </div>
@@ -254,9 +242,11 @@ export default function Header() {
           className={`fixed inset-0 bg-white z-30 pt-20 px-6 flex flex-col gap-6 md:hidden transition-transform duration-300 ease-in-out ${isMobileMenuOpen ? "translate-x-0" : "translate-x-full"}`}
         >
           <form onSubmit={handleSearchSubmit} className="relative w-full">
-            <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[#bec9c2]">
-              search
-            </span>
+            {/* 🟢 Ícono de Lupa (Buscador Móvil) */}
+            <Search
+              size={20}
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-[#bec9c2]"
+            />
             <input
               type="text"
               placeholder="Buscar productos..."
