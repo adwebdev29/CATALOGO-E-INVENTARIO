@@ -1,7 +1,7 @@
 import "@/app/globals.css"; // <-- Vital para que cargue Tailwind
 
 export const metadata = {
-  title: "WOOX | Acceso al Portal",
+  title: "WOOX | Panel de administración WOOX",
   description: "Panel de administración WOOX",
 };
 

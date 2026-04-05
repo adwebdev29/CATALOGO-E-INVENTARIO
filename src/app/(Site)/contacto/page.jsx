@@ -37,6 +37,7 @@ export default function Contacto() {
           .join("\n") + `\n\nTotal estimado: $${totalPrice.toLocaleString()}`
       : form.productosExtra || "(No se seleccionaron productos del catálogo)";
 
+  // 🟢 2. NUEVA FUNCIÓN DE ENVÍO CON NUESTRA API (Nodemailer)
   const handleEmailSubmit = async (e) => {
     e.preventDefault();
     if (!form.nombre || !form.email) {
@@ -45,15 +46,11 @@ export default function Contacto() {
     }
 
     setEnviando(true);
-    const body = new FormData();
-    body.append("Nombre del Cliente", form.nombre);
-    body.append("Email de Contacto", form.email);
-    body.append(
-      "_subject",
-      form.asunto || `Nueva Cotización/Contacto de ${form.nombre}`,
-    );
 
+    // Unimos el asunto, el mensaje y los productos en un solo bloque de texto
     const cuerpoCorreo = `
+      ASUNTO: ${form.asunto || `Nueva Cotización de ${form.nombre}`}
+
       MENSAJE DEL CLIENTE:
       ${form.mensaje ? form.mensaje : "(Sin mensaje adicional)"}
       
@@ -63,16 +60,20 @@ export default function Contacto() {
       ${productosTexto}
     `;
 
-    body.append("Detalles de la Solicitud", cuerpoCorreo);
-    body.append("_replyto", form.email);
-    body.append("_captcha", "false");
-    body.append("_template", "table");
-
     try {
-      const res = await fetch("https://formsubmit.co/wooxmexico@gmail.com", {
+      // Mandamos los datos a nuestra propia API en vez de FormSubmit
+      const res = await fetch("/api/contact", {
         method: "POST",
-        body,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          nombre: form.nombre,
+          correo: form.email,
+          mensaje: cuerpoCorreo,
+        }),
       });
+
       if (res.ok) {
         setEnviado(true);
       } else {
@@ -80,9 +81,10 @@ export default function Contacto() {
           "Hubo un problema al enviar el correo. Por favor, intenta de nuevo o contáctanos por WhatsApp.",
         );
       }
-    } catch {
+    } catch (error) {
       alert("Error de red. Verifica tu conexión a internet.");
     }
+
     setEnviando(false);
   };
 
@@ -91,7 +93,6 @@ export default function Contacto() {
   );
 
   return (
-    // 🟢 2. Usamos solo <main> (Sin Header ni Footer)
     <main className="pt-24 pb-20 max-w-7xl mx-auto px-6 sm:px-8 bg-[#faf8ff] text-[#131b2e] w-full flex-1">
       {/* ── ENCABEZADO DE LA PÁGINA ── */}
       <header className="mb-16">
@@ -316,7 +317,6 @@ export default function Contacto() {
 
             <ul className="space-y-6 relative z-10">
               <li>
-                {/* 🟢 href="tel:..." abre la app de llamadas */}
                 <a
                   href="tel:+525554946246"
                   className="flex items-start gap-4 group cursor-pointer"
@@ -337,7 +337,6 @@ export default function Contacto() {
               </li>
 
               <li>
-                {/* 🟢 href="mailto:..." abre la app de correo (Outlook, Gmail, Apple Mail) */}
                 <a
                   href="mailto:wooxmexico@gmail.com"
                   className="flex items-start gap-4 group cursor-pointer"

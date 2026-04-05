@@ -6,7 +6,7 @@ import WhatsAppFloat from "../_components/WhatsAppFloat";
 import { CartProvider } from "../_context/CartContext";
 
 export const metadata = {
-  title: "WOOX | Catálogo y Herramientas",
+  title: "Woox México",
   description: "Equipos de precisión y herramientas arquitectónicas.",
 };
 

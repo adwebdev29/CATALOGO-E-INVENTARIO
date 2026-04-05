@@ -60,7 +60,6 @@ export default function GestionProductos() {
   };
 
   const openModal = (producto = null) => {
-    // Resetear estados de imagen
     setImageFile(null);
     setUseLocalImage(false);
 
@@ -111,7 +110,6 @@ export default function GestionProductos() {
     setPreviewUrl("");
   };
 
-  // 🟢 FUNCIÓN PARA OPTIMIZAR LA IMAGEN (Convertir a WebP y Redimensionar)
   const optimizeImage = (file) => {
     return new Promise((resolve) => {
       const reader = new FileReader();
@@ -121,7 +119,7 @@ export default function GestionProductos() {
         img.src = event.target.result;
         img.onload = () => {
           const canvas = document.createElement("canvas");
-          const MAX_WIDTH = 800; // Ancho máximo
+          const MAX_WIDTH = 800;
           let scaleSize = 1;
 
           if (img.width > MAX_WIDTH) {
@@ -134,7 +132,6 @@ export default function GestionProductos() {
           const ctx = canvas.getContext("2d");
           ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-          // Convertir a WebP con 80% de calidad
           canvas.toBlob(
             (blob) => {
               resolve(blob);
@@ -147,12 +144,11 @@ export default function GestionProductos() {
     });
   };
 
-  // Manejar la selección del archivo local
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
       setImageFile(file);
-      setPreviewUrl(URL.createObjectURL(file)); // Vista previa inmediata
+      setPreviewUrl(URL.createObjectURL(file));
     }
   };
 
@@ -163,13 +159,11 @@ export default function GestionProductos() {
     try {
       let finalImageUrl = formData.imagen_url;
 
-      // 🟢 SI EL USUARIO ELIGIÓ SUBIR FOTO LOCAL, LA OPTIMIZAMOS Y SUBIMOS
       if (useLocalImage && imageFile) {
         const optimizedBlob = await optimizeImage(imageFile);
         const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.webp`;
 
-        // Subir al bucket 'productos'
-        const { data: uploadData, error: uploadError } = await supabase.storage
+        const { error: uploadError } = await supabase.storage
           .from("productos")
           .upload(fileName, optimizedBlob, {
             contentType: "image/webp",
@@ -180,17 +174,15 @@ export default function GestionProductos() {
         if (uploadError)
           throw new Error("Error al subir la imagen: " + uploadError.message);
 
-        // Obtener la URL pública generada
         const { data: publicUrlData } = supabase.storage
           .from("productos")
           .getPublicUrl(fileName);
         finalImageUrl = publicUrlData.publicUrl;
       }
 
-      // Formatear numéricos
       const payload = {
         ...formData,
-        imagen_url: finalImageUrl, // 🟢 Asignamos la URL (ya sea la de texto o la nueva del bucket)
+        imagen_url: finalImageUrl,
         precio: formData.precio ? parseFloat(formData.precio) : 0,
         precio_2: formData.precio_2 ? parseFloat(formData.precio_2) : null,
         precio_3: formData.precio_3 ? parseFloat(formData.precio_3) : null,
@@ -217,33 +209,42 @@ export default function GestionProductos() {
     }
   };
 
+  // 🟢 FUNCIÓN DE ELIMINAR MEJORADA 🟢
   const handleDelete = async (id) => {
     if (!window.confirm("¿Seguro que deseas eliminar este producto?")) return;
     try {
       const productoAEliminar = productos.find((p) => p.id === id);
 
-      // 1. Borrar imagen del bucket si aplica
-      if (productoAEliminar?.imagen_url?.includes("supabase.co")) {
-        const urlParts = productoAEliminar.imagen_url.split("/");
-        // Tomamos la última parte y le quitamos cualquier parámetro ?t=...
-        const fileNameRaw = urlParts[urlParts.length - 1];
-        const fileName = fileNameRaw.split("?")[0];
+      // 1. Borrar imagen del bucket si pertenece a Supabase
+      if (
+        productoAEliminar?.imagen_url?.includes("supabase.co") &&
+        productoAEliminar?.imagen_url?.includes("/productos/")
+      ) {
+        try {
+          // Extraemos de forma segura el nombre del archivo usando la API de URL nativa
+          const url = new URL(productoAEliminar.imagen_url);
+          const pathSegments = url.pathname.split("/");
+          let fileName = pathSegments[pathSegments.length - 1]; // Toma lo último
 
-        console.log("Intentando borrar archivo:", fileName); // Para que lo veas en la consola (F12)
+          // Decodificamos por si hay caracteres especiales o espacios (%20)
+          fileName = decodeURIComponent(fileName);
 
-        const { data, error: storageError } = await supabase.storage
-          .from("productos")
-          .remove([fileName]);
+          console.log("Intentando borrar archivo exacto:", fileName);
 
-        if (storageError) {
-          // AHORA VEREMOS EXACTAMENTE POR QUÉ FALLA
-          alert(
-            "Aviso: No se pudo borrar la imagen del bucket. Error: " +
-              storageError.message,
-          );
-          console.error("Error completo de Storage:", storageError);
-        } else {
-          console.log("Imagen borrada del bucket exitosamente:", data);
+          const { data, error: storageError } = await supabase.storage
+            .from("productos")
+            .remove([fileName]);
+
+          if (storageError) {
+            console.error("Error de Supabase Storage:", storageError.message);
+            alert(
+              "El producto se eliminará, pero la imagen no se pudo borrar del bucket.",
+            );
+          } else {
+            console.log("Imagen borrada del bucket exitosamente:", data);
+          }
+        } catch (urlError) {
+          console.error("Error al procesar la URL de la imagen:", urlError);
         }
       }
 
@@ -374,7 +375,6 @@ export default function GestionProductos() {
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#131b2e]/60 backdrop-blur-sm animate-in fade-in">
           <div className="bg-white w-full max-w-3xl rounded-2xl shadow-2xl flex flex-col max-h-[90vh]">
-            {/* Cabecera Modal */}
             <div className="flex justify-between items-center p-6 border-b border-[#bec9c2]/30 bg-[#f8faf9] rounded-t-2xl shrink-0">
               <h2 className="text-xl font-black text-[#131b2e]">
                 {editingId ? "Editar Producto" : "Nuevo Producto"}
@@ -387,20 +387,16 @@ export default function GestionProductos() {
               </button>
             </div>
 
-            {/* Formulario (Scrollable) */}
             <form
               onSubmit={handleSubmit}
               className="p-6 overflow-y-auto space-y-8"
             >
-              {/* Información Básica */}
               <div className="space-y-4">
                 <h3 className="font-bold text-[#004532] text-xs uppercase tracking-widest flex items-center gap-2 border-b border-[#bec9c2]/20 pb-2">
                   <Tag size={16} /> Información Básica
                 </h3>
 
-                {/* 🟢 NUEVA SECCIÓN DE IMAGEN (TOGGLE + INPUTS) */}
                 <div className="bg-[#f8faf9] p-4 rounded-xl border border-[#bec9c2]/30 flex flex-col md:flex-row gap-6 items-start">
-                  {/* Vista previa de la imagen */}
                   <div className="w-24 h-24 shrink-0 bg-white border border-[#bec9c2]/40 rounded-lg overflow-hidden flex items-center justify-center">
                     {previewUrl || formData.imagen_url ? (
                       <img
@@ -576,13 +572,11 @@ export default function GestionProductos() {
                 </div>
               </div>
 
-              {/* SECCIÓN DE PRECIOS POR VOLUMEN / VARIANTES */}
               <div className="bg-[#f8faf9] p-5 rounded-xl border border-[#bec9c2]/30 space-y-5">
                 <h3 className="font-bold text-[#004532] text-xs uppercase tracking-widest flex items-center gap-2 mb-2">
                   <Package size={16} /> Precios y Presentaciones (Variantes)
                 </h3>
 
-                {/* Nivel 1 (Obligatorio) */}
                 <div className="grid grid-cols-2 gap-4 items-end bg-white p-3 rounded-lg border border-[#bec9c2]/20 shadow-sm border-l-4 border-l-[#131b2e]">
                   <div>
                     <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">
@@ -616,7 +610,6 @@ export default function GestionProductos() {
                   </div>
                 </div>
 
-                {/* Nivel 2 (Opcional) */}
                 <div className="grid grid-cols-2 gap-4 items-end bg-white p-3 rounded-lg border border-[#bec9c2]/20 shadow-sm border-l-4 border-l-[#004532]">
                   <div>
                     <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">
@@ -648,7 +641,6 @@ export default function GestionProductos() {
                   </div>
                 </div>
 
-                {/* Nivel 3 (Opcional) */}
                 <div className="grid grid-cols-2 gap-4 items-end bg-white p-3 rounded-lg border border-[#bec9c2]/20 shadow-sm border-l-4 border-l-emerald-500">
                   <div>
                     <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">
@@ -681,7 +673,6 @@ export default function GestionProductos() {
                 </div>
               </div>
 
-              {/* Botones de Guardar / Cancelar */}
               <div className="flex justify-end gap-3 pt-4 border-t border-[#bec9c2]/30">
                 <button
                   type="button"

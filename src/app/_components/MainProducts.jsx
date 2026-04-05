@@ -3,7 +3,7 @@ import Link from "next/link";
 import SliderButton from "./SliderButton";
 import MainProductsList from "./MainProductsList";
 import { useRef } from "react";
-
+import { ArrowRight } from "lucide-react";
 export default function MainProducts({ productosDestacados }) {
   const scrollRef = useRef(null);
 
@@ -54,12 +54,7 @@ export default function MainProducts({ productosDestacados }) {
             className="inline-flex items-center gap-2 border-2 border-[#004532] text-[#004532] px-10 py-4 font-bold text-xs tracking-widest uppercase hover:bg-[#004532] hover:text-white transition-all rounded-lg"
           >
             Ver Catálogo Completo
-            <span
-              className="material-symbols-outlined"
-              style={{ fontSize: "16px" }}
-            >
-              arrow_forward
-            </span>
+            <ArrowRight size={16} />
           </Link>
         </div>
       </div>
