@@ -91,8 +91,9 @@ export default async function Home() {
         categoria: p.categoria,
         descripcion: p.descripcion,
         precio: p.precio,
-        imagen: urlValida ? p.imagen_url : "https://via.placeholder.com/300",
-        // 🟢 AQUÍ ESTÁ LA CORRECCIÓN: Agregamos todas las variantes para que la tarjeta las lea
+        imagen_url: urlValida
+          ? p.imagen_url
+          : "https://via.placeholder.com/300", // ← Cambiado a imagen_url
         etiqueta_1: p.etiqueta_1,
         etiqueta_2: p.etiqueta_2,
         precio_2: p.precio_2,
