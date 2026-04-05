@@ -4,25 +4,26 @@ const nextConfig = {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "rurbeszsrsahjotyjojn.supabase.co", // 🟢 Tu dominio de Supabase
+        hostname: "rurbeszsrsahjotyjojn.supabase.co",
         port: "",
-        pathname: "/storage/v1/object/public/**", // Permitir todo lo que esté en tu storage público
+        pathname: "/storage/v1/object/public/**",
       },
       {
         protocol: "https",
-        hostname: "picsum.photos", // 🟢 Por si aún tienes los de prueba que inyectamos con SQL
+        hostname: "placehold.co", // 🟢 Agregamos este
         port: "",
         pathname: "/**",
       },
       {
         protocol: "https",
-        hostname: "via.placeholder.com", // 🟢 El que marcaba error en tu consola hace rato
+        hostname: "via.placeholder.com",
         port: "",
         pathname: "/**",
       },
     ],
+    // Opcional: A veces los SVGs externos necesitan esta regla para funcionar en Next Image
+    dangerouslyAllowSVG: true,
   },
 };
 
 export default nextConfig;
-// Nota: Si tu archivo es .js y no .mjs, usa "module.exports = nextConfig;" en lugar de "export default nextConfig;"

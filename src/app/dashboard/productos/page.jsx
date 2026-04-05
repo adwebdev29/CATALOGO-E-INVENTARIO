@@ -9,6 +9,8 @@ import {
   Package,
   Tag,
   Image as ImageIcon,
+  UploadCloud,
+  Link as LinkIcon,
 } from "lucide-react";
 
 export default function GestionProductos() {
@@ -20,7 +22,11 @@ export default function GestionProductos() {
   const [editingId, setEditingId] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  // 🟢 ESTADO INICIAL DEL FORMULARIO INCLUYENDO VARIANTES
+  // 🟢 ESTADOS PARA LA SUBIDA DE IMÁGENES
+  const [useLocalImage, setUseLocalImage] = useState(false);
+  const [imageFile, setImageFile] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState("");
+
   const [formData, setFormData] = useState({
     nombre: "",
     descripcion: "",
@@ -29,13 +35,10 @@ export default function GestionProductos() {
     imagen_url: "",
     destacado: false,
     stock: 0,
-    // Variante 1 (Principal)
     etiqueta_1: "1 Pieza",
     precio: "",
-    // Variante 2
     etiqueta_2: "",
     precio_2: "",
-    // Variante 3
     etiqueta_3: "",
     precio_3: "",
   });
@@ -57,8 +60,13 @@ export default function GestionProductos() {
   };
 
   const openModal = (producto = null) => {
+    // Resetear estados de imagen
+    setImageFile(null);
+    setUseLocalImage(false);
+
     if (producto) {
       setEditingId(producto.id);
+      setPreviewUrl(producto.imagen_url || "");
       setFormData({
         nombre: producto.nombre || "",
         descripcion: producto.descripcion || "",
@@ -76,6 +84,7 @@ export default function GestionProductos() {
       });
     } else {
       setEditingId(null);
+      setPreviewUrl("");
       setFormData({
         nombre: "",
         descripcion: "",
@@ -98,22 +107,96 @@ export default function GestionProductos() {
   const closeModal = () => {
     setIsModalOpen(false);
     setEditingId(null);
+    setImageFile(null);
+    setPreviewUrl("");
+  };
+
+  // 🟢 FUNCIÓN PARA OPTIMIZAR LA IMAGEN (Convertir a WebP y Redimensionar)
+  const optimizeImage = (file) => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = (event) => {
+        const img = new Image();
+        img.src = event.target.result;
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          const MAX_WIDTH = 800; // Ancho máximo
+          let scaleSize = 1;
+
+          if (img.width > MAX_WIDTH) {
+            scaleSize = MAX_WIDTH / img.width;
+          }
+
+          canvas.width = img.width * scaleSize;
+          canvas.height = img.height * scaleSize;
+
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+          // Convertir a WebP con 80% de calidad
+          canvas.toBlob(
+            (blob) => {
+              resolve(blob);
+            },
+            "image/webp",
+            0.8,
+          );
+        };
+      };
+    });
+  };
+
+  // Manejar la selección del archivo local
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setImageFile(file);
+      setPreviewUrl(URL.createObjectURL(file)); // Vista previa inmediata
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Formatear numéricos (Si están vacíos los pasamos como null a Supabase)
-    const payload = {
-      ...formData,
-      precio: formData.precio ? parseFloat(formData.precio) : 0,
-      precio_2: formData.precio_2 ? parseFloat(formData.precio_2) : null,
-      precio_3: formData.precio_3 ? parseFloat(formData.precio_3) : null,
-      stock: parseInt(formData.stock) || 0,
-    };
-
     try {
+      let finalImageUrl = formData.imagen_url;
+
+      // 🟢 SI EL USUARIO ELIGIÓ SUBIR FOTO LOCAL, LA OPTIMIZAMOS Y SUBIMOS
+      if (useLocalImage && imageFile) {
+        const optimizedBlob = await optimizeImage(imageFile);
+        const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.webp`;
+
+        // Subir al bucket 'productos'
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from("productos")
+          .upload(fileName, optimizedBlob, {
+            contentType: "image/webp",
+            cacheControl: "3600",
+            upsert: false,
+          });
+
+        if (uploadError)
+          throw new Error("Error al subir la imagen: " + uploadError.message);
+
+        // Obtener la URL pública generada
+        const { data: publicUrlData } = supabase.storage
+          .from("productos")
+          .getPublicUrl(fileName);
+        finalImageUrl = publicUrlData.publicUrl;
+      }
+
+      // Formatear numéricos
+      const payload = {
+        ...formData,
+        imagen_url: finalImageUrl, // 🟢 Asignamos la URL (ya sea la de texto o la nueva del bucket)
+        precio: formData.precio ? parseFloat(formData.precio) : 0,
+        precio_2: formData.precio_2 ? parseFloat(formData.precio_2) : null,
+        precio_3: formData.precio_3 ? parseFloat(formData.precio_3) : null,
+        stock: parseInt(formData.stock) || 0,
+      };
+
       if (editingId) {
         const { error } = await supabase
           .from("productos")
@@ -124,6 +207,7 @@ export default function GestionProductos() {
         const { error } = await supabase.from("productos").insert([payload]);
         if (error) throw error;
       }
+
       await fetchData();
       closeModal();
     } catch (error) {
@@ -136,11 +220,40 @@ export default function GestionProductos() {
   const handleDelete = async (id) => {
     if (!window.confirm("¿Seguro que deseas eliminar este producto?")) return;
     try {
+      const productoAEliminar = productos.find((p) => p.id === id);
+
+      // 1. Borrar imagen del bucket si aplica
+      if (productoAEliminar?.imagen_url?.includes("supabase.co")) {
+        const urlParts = productoAEliminar.imagen_url.split("/");
+        // Tomamos la última parte y le quitamos cualquier parámetro ?t=...
+        const fileNameRaw = urlParts[urlParts.length - 1];
+        const fileName = fileNameRaw.split("?")[0];
+
+        console.log("Intentando borrar archivo:", fileName); // Para que lo veas en la consola (F12)
+
+        const { data, error: storageError } = await supabase.storage
+          .from("productos")
+          .remove([fileName]);
+
+        if (storageError) {
+          // AHORA VEREMOS EXACTAMENTE POR QUÉ FALLA
+          alert(
+            "Aviso: No se pudo borrar la imagen del bucket. Error: " +
+              storageError.message,
+          );
+          console.error("Error completo de Storage:", storageError);
+        } else {
+          console.log("Imagen borrada del bucket exitosamente:", data);
+        }
+      }
+
+      // 2. Eliminar de la base de datos
       const { error } = await supabase.from("productos").delete().eq("id", id);
       if (error) throw error;
+
       await fetchData();
     } catch (error) {
-      alert("Error al eliminar: " + error.message);
+      alert("Error al eliminar el registro: " + error.message);
     }
   };
 
@@ -193,7 +306,9 @@ export default function GestionProductos() {
                     )}
                   </div>
                   <div>
-                    <p className="font-bold text-[#131b2e]">{p.nombre}</p>
+                    <p className="font-bold text-[#131b2e] truncate max-w-[200px]">
+                      {p.nombre}
+                    </p>
                     {p.destacado && (
                       <span className="text-[9px] bg-yellow-100 text-yellow-800 font-bold px-2 py-0.5 rounded-full uppercase">
                         Destacado
@@ -260,7 +375,7 @@ export default function GestionProductos() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#131b2e]/60 backdrop-blur-sm animate-in fade-in">
           <div className="bg-white w-full max-w-3xl rounded-2xl shadow-2xl flex flex-col max-h-[90vh]">
             {/* Cabecera Modal */}
-            <div className="flex justify-between items-center p-6 border-b border-[#bec9c2]/30 bg-[#f8faf9] rounded-t-2xl">
+            <div className="flex justify-between items-center p-6 border-b border-[#bec9c2]/30 bg-[#f8faf9] rounded-t-2xl shrink-0">
               <h2 className="text-xl font-black text-[#131b2e]">
                 {editingId ? "Editar Producto" : "Nuevo Producto"}
               </h2>
@@ -282,6 +397,80 @@ export default function GestionProductos() {
                 <h3 className="font-bold text-[#004532] text-xs uppercase tracking-widest flex items-center gap-2 border-b border-[#bec9c2]/20 pb-2">
                   <Tag size={16} /> Información Básica
                 </h3>
+
+                {/* 🟢 NUEVA SECCIÓN DE IMAGEN (TOGGLE + INPUTS) */}
+                <div className="bg-[#f8faf9] p-4 rounded-xl border border-[#bec9c2]/30 flex flex-col md:flex-row gap-6 items-start">
+                  {/* Vista previa de la imagen */}
+                  <div className="w-24 h-24 shrink-0 bg-white border border-[#bec9c2]/40 rounded-lg overflow-hidden flex items-center justify-center">
+                    {previewUrl || formData.imagen_url ? (
+                      <img
+                        src={previewUrl || formData.imagen_url}
+                        alt="Preview"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <ImageIcon className="text-[#bec9c2] w-8 h-8" />
+                    )}
+                  </div>
+
+                  <div className="flex-1 w-full space-y-3">
+                    <div className="flex items-center gap-4">
+                      <label className="flex items-center gap-2 text-sm font-bold text-[#131b2e] cursor-pointer">
+                        <input
+                          type="radio"
+                          name="imageType"
+                          checked={!useLocalImage}
+                          onChange={() => setUseLocalImage(false)}
+                          className="accent-[#004532]"
+                        />
+                        <LinkIcon size={16} className="text-[#3f4944]" /> Usar
+                        Enlace URL
+                      </label>
+                      <label className="flex items-center gap-2 text-sm font-bold text-[#131b2e] cursor-pointer">
+                        <input
+                          type="radio"
+                          name="imageType"
+                          checked={useLocalImage}
+                          onChange={() => setUseLocalImage(true)}
+                          className="accent-[#004532]"
+                        />
+                        <UploadCloud size={16} className="text-[#3f4944]" />{" "}
+                        Subir desde dispositivo
+                      </label>
+                    </div>
+
+                    {useLocalImage ? (
+                      <div className="relative">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleFileChange}
+                          required={!editingId && !formData.imagen_url}
+                          className="w-full text-sm text-[#3f4944] file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-[#004532] file:text-white hover:file:bg-[#131b2e] transition-all cursor-pointer bg-white border border-[#bec9c2]/30 rounded-lg p-1"
+                        />
+                        <p className="text-[10px] text-emerald-600 mt-1 font-bold">
+                          Se comprimirá automáticamente a WebP para ahorrar
+                          espacio.
+                        </p>
+                      </div>
+                    ) : (
+                      <input
+                        type="url"
+                        placeholder="https://..."
+                        value={formData.imagen_url}
+                        onChange={(e) => {
+                          setFormData({
+                            ...formData,
+                            imagen_url: e.target.value,
+                          });
+                          setPreviewUrl(e.target.value);
+                        }}
+                        className="w-full bg-white border border-[#bec9c2]/30 p-2.5 rounded-lg focus:ring-2 focus:ring-[#004532] outline-none text-sm"
+                      />
+                    )}
+                  </div>
+                </div>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-bold text-[#3f4944] uppercase tracking-wider mb-1">
@@ -295,20 +484,6 @@ export default function GestionProductos() {
                         setFormData({ ...formData, nombre: e.target.value })
                       }
                       className="w-full bg-[#f2f3ff] border border-[#bec9c2]/30 p-2.5 rounded-lg focus:ring-2 focus:ring-[#004532] outline-none text-sm"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-[#3f4944] uppercase tracking-wider mb-1">
-                      URL Imagen
-                    </label>
-                    <input
-                      type="url"
-                      value={formData.imagen_url}
-                      onChange={(e) =>
-                        setFormData({ ...formData, imagen_url: e.target.value })
-                      }
-                      className="w-full bg-[#f2f3ff] border border-[#bec9c2]/30 p-2.5 rounded-lg focus:ring-2 focus:ring-[#004532] outline-none text-sm"
-                      placeholder="https://..."
                     />
                   </div>
                   <div>
@@ -331,6 +506,9 @@ export default function GestionProductos() {
                       ))}
                     </select>
                   </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-bold text-[#3f4944] uppercase tracking-wider mb-1">
                       Marca
@@ -350,7 +528,39 @@ export default function GestionProductos() {
                       ))}
                     </select>
                   </div>
+                  <div className="flex gap-4">
+                    <div className="flex-1">
+                      <label className="block text-xs font-bold text-[#3f4944] uppercase tracking-wider mb-1">
+                        Stock
+                      </label>
+                      <input
+                        type="number"
+                        value={formData.stock}
+                        onChange={(e) =>
+                          setFormData({ ...formData, stock: e.target.value })
+                        }
+                        className="w-full bg-[#f2f3ff] border border-[#bec9c2]/30 p-2.5 rounded-lg focus:ring-2 focus:ring-[#004532] outline-none text-sm"
+                      />
+                    </div>
+                    <div className="flex items-center pt-5">
+                      <label className="flex items-center gap-2 text-xs font-bold text-[#131b2e] uppercase tracking-wider cursor-pointer bg-[#e6f4ed] p-2.5 rounded-lg">
+                        <input
+                          type="checkbox"
+                          checked={formData.destacado}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              destacado: e.target.checked,
+                            })
+                          }
+                          className="w-4 h-4 accent-[#004532]"
+                        />
+                        ⭐ Destacar
+                      </label>
+                    </div>
+                  </div>
                 </div>
+
                 <div>
                   <label className="block text-xs font-bold text-[#3f4944] uppercase tracking-wider mb-1">
                     Descripción
@@ -364,39 +574,9 @@ export default function GestionProductos() {
                     className="w-full bg-[#f2f3ff] border border-[#bec9c2]/30 p-2.5 rounded-lg focus:ring-2 focus:ring-[#004532] outline-none text-sm resize-none"
                   />
                 </div>
-
-                <div className="flex gap-6">
-                  <label className="flex items-center gap-2 text-sm font-bold text-[#131b2e] cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={formData.destacado}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          destacado: e.target.checked,
-                        })
-                      }
-                      className="w-4 h-4 accent-[#004532]"
-                    />
-                    ⭐ Destacar en Inicio
-                  </label>
-                  <div className="flex items-center gap-2">
-                    <label className="text-xs font-bold text-[#3f4944] uppercase tracking-wider">
-                      Stock:
-                    </label>
-                    <input
-                      type="number"
-                      value={formData.stock}
-                      onChange={(e) =>
-                        setFormData({ ...formData, stock: e.target.value })
-                      }
-                      className="w-20 bg-[#f2f3ff] border border-[#bec9c2]/30 p-1.5 rounded-md focus:ring-2 focus:ring-[#004532] outline-none text-sm text-center"
-                    />
-                  </div>
-                </div>
               </div>
 
-              {/* 🟢 SECCIÓN DE PRECIOS POR VOLUMEN / VARIANTES */}
+              {/* SECCIÓN DE PRECIOS POR VOLUMEN / VARIANTES */}
               <div className="bg-[#f8faf9] p-5 rounded-xl border border-[#bec9c2]/30 space-y-5">
                 <h3 className="font-bold text-[#004532] text-xs uppercase tracking-widest flex items-center gap-2 mb-2">
                   <Package size={16} /> Precios y Presentaciones (Variantes)
@@ -448,7 +628,7 @@ export default function GestionProductos() {
                       onChange={(e) =>
                         setFormData({ ...formData, etiqueta_2: e.target.value })
                       }
-                      placeholder="Ej. Display 12 Pzas"
+                      placeholder="Ej. Pack 5 Pzas"
                       className="w-full bg-slate-50 border border-slate-200 p-2 rounded-md outline-none focus:border-[#004532] text-sm"
                     />
                   </div>
@@ -480,7 +660,7 @@ export default function GestionProductos() {
                       onChange={(e) =>
                         setFormData({ ...formData, etiqueta_3: e.target.value })
                       }
-                      placeholder="Ej. Caja 48 Pzas"
+                      placeholder="Ej. Caja 20 Pzas"
                       className="w-full bg-slate-50 border border-slate-200 p-2 rounded-md outline-none focus:border-[#004532] text-sm"
                     />
                   </div>
@@ -513,9 +693,12 @@ export default function GestionProductos() {
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="bg-[#131b2e] hover:bg-[#004532] text-white px-8 py-3 rounded-xl font-bold text-xs uppercase tracking-widest shadow-md hover:shadow-lg transition-all disabled:opacity-50"
+                  className="bg-[#131b2e] hover:bg-[#004532] text-white px-8 py-3 rounded-xl font-bold text-xs uppercase tracking-widest shadow-md hover:shadow-lg transition-all disabled:opacity-50 flex items-center gap-2"
                 >
-                  {isLoading ? "Guardando..." : "Guardar Producto"}
+                  {isLoading && (
+                    <UploadCloud size={16} className="animate-bounce" />
+                  )}
+                  {isLoading ? "Subiendo..." : "Guardar Producto"}
                 </button>
               </div>
             </form>

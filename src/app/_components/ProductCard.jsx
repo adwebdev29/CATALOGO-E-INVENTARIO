@@ -11,8 +11,12 @@ export default function ProductCard({ producto, main = true }) {
   const [opcionSeleccionada, setOpcionSeleccionada] = useState(1);
 
   // En ProductCard.js, línea donde defines imageUrl
+
+  // En ProductCard.jsx y ProductDetailModal.jsx:
   const imageUrl =
-    producto.imagen_url || producto.imagen || "https://via.placeholder.com/300";
+    producto.imagen_url ||
+    producto.imagen ||
+    "https://placehold.co/400x400/png";
 
   // 🟢 CREAMOS EL ARREGLO DE VARIANTES DINÁMICAMENTE
   const variantes = [
