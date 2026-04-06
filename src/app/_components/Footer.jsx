@@ -32,6 +32,14 @@ export default function Footer() {
                 Catálogo Completo
               </Link>
             </li>
+            <li>
+              <Link
+                href="/contacto"
+                className="hover:text-white transition-colors"
+              >
+                Contacto
+              </Link>
+            </li>
           </ul>
         </div>
 
@@ -39,16 +47,27 @@ export default function Footer() {
           <h3 className="text-xs font-bold uppercase tracking-widest text-[#8bd6b6] mb-4">
             Contacto
           </h3>
-          {/* 🟢 LISTA ACTUALIZADA CON TU NÚMERO Y CORREO */}
+          {/* 🟢 LISTA ACTUALIZADA CON ENLACES CLICKEABLES */}
           <ul className="space-y-3 text-sm text-slate-300">
-            <li className="flex items-center gap-3">
-              <Phone size={16} className="text-[#8bd6b6]" />
-              +52 55 5494 6246
+            <li>
+              <a
+                href="tel:+525554946246"
+                className="flex items-center gap-3 hover:text-white transition-colors"
+              >
+                <Phone size={16} className="text-[#8bd6b6]" />
+                +52 55 5494 6246
+              </a>
             </li>
-            <li className="flex items-center gap-3">
-              <Mail size={16} className="text-[#8bd6b6]" />
-              wooxmexico@gmail.com
+            <li>
+              <a
+                href="mailto:wooxmexico@gmail.com"
+                className="flex items-center gap-3 hover:text-white transition-colors"
+              >
+                <Mail size={16} className="text-[#8bd6b6]" />
+                wooxmexico@gmail.com
+              </a>
             </li>
+            {/* El mapa lo dejamos como texto plano, o si prefieres también puedes enlazarlo a Google Maps */}
             <li className="flex items-center gap-3">
               <MapPin size={16} className="text-[#8bd6b6]" />
               Naucalpan, Edo. Mex

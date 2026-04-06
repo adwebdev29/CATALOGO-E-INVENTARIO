@@ -97,11 +97,10 @@ export default function Contacto() {
       {/* ── ENCABEZADO DE LA PÁGINA ── */}
       <header className="mb-16">
         <span className="text-[#004532] font-bold tracking-widest text-[0.6875rem] uppercase mb-2 block">
-          Contacto Institucional
+          Contacto
         </span>
         <h1 className="text-[#131b2e] text-[3rem] sm:text-[3.5rem] font-black tracking-tight leading-[1.1] mb-4">
-          Hablemos de su <br />
-          próximo <span className="text-[#004532]">desafío.</span>
+          Estamos para <span className="text-[#004532]">ayudarte</span>
         </h1>
         <div className="w-24 h-1 bg-[#004532]" />
       </header>
@@ -241,7 +240,7 @@ export default function Contacto() {
                     ))}
                     <div className="border-t border-[#004532]/20 pt-3 mt-2 flex justify-between items-center font-black">
                       <span className="text-[10px] uppercase tracking-widest text-[#3f4944]">
-                        Inversión Estimada
+                        Total estimado
                       </span>
                       <span className="text-lg text-[#004532]">
                         ${totalPrice.toLocaleString()}
@@ -333,8 +332,8 @@ export default function Contacto() {
             </div>
             <h3 className="text-xl font-bold mb-2">WhatsApp Directo</h3>
             <p className="text-sm text-[#3f4944] mb-6 leading-relaxed">
-              Respuesta inmediata para consultas rápidas y soporte técnico en
-              vivo.
+              Pregunta por precios, productos o recomendaciones, te atendemos al
+              momento.
             </p>
             <a
               href="https://wa.me/525554946246"
