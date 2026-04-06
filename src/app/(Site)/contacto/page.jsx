@@ -425,10 +425,8 @@ export default function Contacto() {
                 Tienda Oficial
               </h3>
               <p className="text-[#3f4944] text-sm leading-relaxed">
-                Eje Central Lázaro Cárdenas Puente Peredo s/n - Local C<br />
-                Colonia Centro, Centro, Cuauhtémoc
-                <br />
-                06000 Ciudad de México, CDMX
+                Eje Central Lázaro Cárdenas Puente Peredo s/n - Local C, Colonia
+                Centro, Centro, Cuauhtémoc 06000 Ciudad de México, CDMX
               </p>
             </div>
           </div>

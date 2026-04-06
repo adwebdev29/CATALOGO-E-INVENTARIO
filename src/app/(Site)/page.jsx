@@ -170,7 +170,7 @@ export default async function Home() {
       {/* ── CATEGORIES (100% DINÁMICAS DESDE SUPABASE) ── */}
       <section className="px-8 py-24 bg-[#f2f3ff]">
         <div className="max-w-7xl mx-auto">
-          <div className="flex justify-between items-end mb-12 architectural-border pl-6">
+          <div className="block  md:flex justify-between gap-5 items-end mb-12 architectural-border pl-6">
             <div>
               <h2 className="text-3xl font-black tracking-tight text-[#131b2e] uppercase">
                 Categorías <span className="text-[#004532]">Populares</span>
@@ -181,7 +181,7 @@ export default async function Home() {
             </div>
             <Link
               href="/catalogo"
-              className="text-[#004532] font-bold text-xs uppercase tracking-widest flex items-center gap-2 hover:translate-x-1 transition-transform"
+              className="text-[#004532] mt-6 font-bold text-xs uppercase tracking-widest flex items-center gap-2 hover:translate-x-1 transition-transform"
             >
               Ver todo
               <ArrowRight size={16} />
@@ -253,7 +253,7 @@ export default async function Home() {
               día a día.
             </p>
 
-            <div className="grid grid-cols-2 gap-12 mt-16">
+            <div className="block  md:grid md:grid-cols-2 gap-12 mt-16">
               <div className="border-l border-white/10 pl-6">
                 <p className="text-5xl font-black text-[#8bd6b6]">
                   Calidad real{" "}

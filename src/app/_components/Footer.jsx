@@ -9,8 +9,9 @@ export default function Footer() {
         <div>
           <h2 className="text-2xl font-black tracking-widest mb-4">WOOX</h2>
           <p className="text-slate-400 text-sm leading-relaxed max-w-sm">
-            Equipamiento especializado para lubricación, control de fluidos y
-            mantenimiento automotriz de alto rendimiento.
+            Especialistas en tecnología y electrónica. Encuentra accesorios
+            móviles, cables, cargadores y equipo de audio de la más alta calidad
+            para tu día a día.
           </p>
         </div>
 
@@ -68,16 +69,27 @@ export default function Footer() {
               </a>
             </li>
             {/* El mapa lo dejamos como texto plano, o si prefieres también puedes enlazarlo a Google Maps */}
-            <li className="flex items-center gap-3">
-              <MapPin size={16} className="text-[#8bd6b6]" />
-              Naucalpan, Edo. Mex
+            <li>
+              <a
+                href="https://maps.app.goo.gl/5WSxmwEPAuHJWCDx6"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-start gap-3 hover:text-white transition-colors group"
+              >
+                {/* Le puse mt-1 (margin-top) y shrink-0 para que el ícono se quede arriba y no se aplaste */}
+                <MapPin size={16} className="text-[#8bd6b6] shrink-0 mt-1" />
+                <span className="leading-relaxed">
+                  Eje Central Lázaro Cárdenas Puente Peredo s/n - Local C,
+                  Colonia Centro, Centro, Cuauhtémoc 06000 Ciudad de México,
+                  CDMX
+                </span>
+              </a>
             </li>
           </ul>
         </div>
       </div>
       <div className="max-w-7xl mx-auto text-center border-t border-white/10 pt-8 text-xs text-slate-500 uppercase tracking-widest">
-        © {new Date().getFullYear()} WOOX Technologies. Todos los derechos
-        reservados.
+        © {new Date().getFullYear()} WOOX. Todos los derechos reservados.
       </div>
     </footer>
   );
