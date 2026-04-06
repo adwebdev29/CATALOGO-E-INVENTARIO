@@ -2,7 +2,6 @@
 import { useState } from "react";
 import { useCart } from "@/app/_context/CartContext";
 
-// 🟢 1. Importamos todos los íconos EXACTOS que necesitamos de Lucide
 import {
   CheckCircle,
   ShoppingCart,
@@ -11,9 +10,10 @@ import {
   Phone,
   MapPin,
   Clock,
-  Store,
   Loader2,
 } from "lucide-react";
+
+import { FaFacebookF, FaInstagram, FaTiktok } from "react-icons/fa";
 
 export default function Contacto() {
   const { cart, totalPrice } = useCart();
@@ -37,7 +37,7 @@ export default function Contacto() {
           .join("\n") + `\n\nTotal estimado: $${totalPrice.toLocaleString()}`
       : form.productosExtra || "(No se seleccionaron productos del catálogo)";
 
-  // 🟢 2. NUEVA FUNCIÓN DE ENVÍO CON NUESTRA API (Nodemailer)
+  // 🟢 NUEVA FUNCIÓN DE ENVÍO CON NUESTRA API (Nodemailer)
   const handleEmailSubmit = async (e) => {
     e.preventDefault();
     if (!form.nombre || !form.email) {
@@ -61,7 +61,7 @@ export default function Contacto() {
     `;
 
     try {
-      // Mandamos los datos a nuestra propia API en vez de FormSubmit
+      // Mandamos los datos a nuestra propia API
       const res = await fetch("/api/contact", {
         method: "POST",
         headers: {
@@ -153,7 +153,7 @@ export default function Contacto() {
                     Nombre Completo *
                   </label>
                   <input
-                    className="w-full bg-[#f2f3ff] border-0 border-b-2 border-[#bec9c2]/30 focus:border-[#004532] focus:ring-0 outline-none transition-all py-3 px-3 placeholder-[#6f7973]/50 text-sm rounded-t-md"
+                    className="w-full bg-[#f2f3ff] border-0 border-b-2 border-[#bec9c2]/30 focus:border-[#004532] focus:ring-0 outline-none transition-all py-3 px-3"
                     placeholder="Ej. Alejandro Valdés"
                     type="text"
                     value={form.nombre}
@@ -168,7 +168,8 @@ export default function Contacto() {
                     Email de Contacto *
                   </label>
                   <input
-                    className="w-full bg-[#f2f3ff] border-0 border-b-2 border-[#bec9c2]/30 focus:border-[#004532] focus:ring-0 outline-none transition-all py-3 px-3 placeholder-[#6f7973]/50 text-sm rounded-t-md"
+                    className="w-full bg-[#f2f3ff] border-0 border-b-2 border-[#bec9c2]/30
+                     focus:border-[#004532] focus:ring-0 outline-none transition-all py-3 px-3"
                     placeholder="nombre@empresa.com"
                     type="email"
                     value={form.email}
@@ -185,7 +186,8 @@ export default function Contacto() {
                   Asunto
                 </label>
                 <input
-                  className="w-full bg-[#f2f3ff] border-0 border-b-2 border-[#bec9c2]/30 focus:border-[#004532] focus:ring-0 outline-none transition-all py-3 px-3 placeholder-[#6f7973]/50 text-sm rounded-t-md"
+                  className="w-full bg-[#f2f3ff] border-0 border-b-2 border-[#bec9c2]/30 focus:border-[#004532] focus:ring-0 outline-none 
+                  transition-all py-3 px-3"
                   placeholder="¿En qué podemos ayudarle?"
                   type="text"
                   value={form.asunto}
@@ -198,7 +200,7 @@ export default function Contacto() {
                   Mensaje Adicional
                 </label>
                 <textarea
-                  className="w-full bg-[#f2f3ff] border-0 border-b-2 border-[#bec9c2]/30 focus:border-[#004532] focus:ring-0 outline-none transition-all py-3 px-3 placeholder-[#6f7973]/50 resize-none text-sm rounded-t-md"
+                  className="w-full bg-[#f2f3ff] border-0 border-b-2 border-[#bec9c2]/30 focus:border-[#004532] focus:ring-0 outline-none transition-all py-3 px-3 resize-none text-sm rounded-t-md"
                   placeholder="Describa requerimientos específicos, dudas o comentarios..."
                   rows={3}
                   value={form.mensaje}
@@ -248,7 +250,7 @@ export default function Contacto() {
                   </div>
                 ) : (
                   <textarea
-                    className="w-full bg-[#f2f3ff] border-0 border-b-2 border-[#bec9c2]/30 focus:border-[#004532] focus:ring-0 outline-none transition-all py-3 px-3 placeholder-[#6f7973]/50 resize-none text-sm rounded-t-md"
+                    className="w-full bg-[#f2f3ff] border-0 border-b-2 border-[#bec9c2]/30 focus:border-[#004532] focus:ring-0 outline-none transition-all py-3 px-3 resize-none text-sm rounded-t-md"
                     placeholder="Tu carrito está vacío. Si buscas algún producto en específico, escríbelo aquí..."
                     rows={3}
                     value={form.productosExtra}
@@ -290,6 +292,41 @@ export default function Contacto() {
 
         {/* ── SIDEBAR CON INFORMACIÓN DE CONTACTO ── */}
         <div className="lg:col-span-5 space-y-6">
+          {/* ── REDES SOCIALES (NUEVO BLOQUE CON REACT-ICONS) ── */}
+          <div className="bg-white p-8 rounded-xl shadow-sm border border-[#bec9c2]/20">
+            <h4 className="text-[#004532] font-black text-xs uppercase tracking-[0.2em] mb-6">
+              Síguenos en Redes
+            </h4>
+            <div className="flex gap-4">
+              <a
+                href="https://www.facebook.com/share/1RFZuqigt8/?mibextid=wwXIfr"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-[#f2f3ff] text-[#131b2e] hover:bg-[#1877F2] hover:text-white w-12 h-12 flex items-center justify-center rounded-xl transition-all shadow-sm hover:shadow-md hover:-translate-y-1"
+                title="Facebook"
+              >
+                <FaFacebookF size={20} />
+              </a>
+              <a
+                href="https://www.instagram.com/woox471?igsh=MXRsejZ2MTgwYmk3cg=="
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-[#f2f3ff] text-[#131b2e] hover:bg-[#E1306C] hover:text-white w-12 h-12 flex items-center justify-center rounded-xl transition-all shadow-sm hover:shadow-md hover:-translate-y-1"
+                title="Instagram"
+              >
+                <FaInstagram size={22} />
+              </a>
+              <a
+                href="https://www.tiktok.com/@woox084?is_from_webapp=1&sender_device=pc"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-[#f2f3ff] text-[#131b2e] hover:bg-black hover:text-white w-12 h-12 flex items-center justify-center rounded-xl transition-all shadow-sm hover:shadow-md hover:-translate-y-1"
+                title="TikTok"
+              >
+                <FaTiktok size={20} />
+              </a>
+            </div>
+          </div>
           <div className="group bg-white p-8 rounded-xl flex flex-col items-start hover:bg-[#f2f3ff] transition-all border border-[#bec9c2]/20 border-l-4 border-l-[#25D366] shadow-sm">
             <div className="bg-[#25D366]/10 p-3 rounded-lg mb-6 text-[#25D366]">
               <MessageCircle size={32} strokeWidth={1.5} />

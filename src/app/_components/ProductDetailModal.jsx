@@ -6,6 +6,8 @@ import { useCart } from "@/app/_context/CartContext";
 export default function ProductDetailModal({ producto, isOpen, onClose }) {
   const { addToCart } = useCart();
   const [opcionSeleccionada, setOpcionSeleccionada] = useState(1);
+  // 🟢 ESTADO PARA CONTROLAR EL "VER MÁS" DE LA DESCRIPCIÓN
+  const [isExpanded, setIsExpanded] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -20,6 +22,7 @@ export default function ProductDetailModal({ producto, isOpen, onClose }) {
 
   const cerrarModal = () => {
     setOpcionSeleccionada(1);
+    setIsExpanded(false); // Reseteamos el estado al cerrar
     onClose();
   };
 
@@ -68,6 +71,18 @@ export default function ProductDetailModal({ producto, isOpen, onClose }) {
     `¡Hola WOOX! Me interesa adquirir: ${producto.nombre} en presentación de ${varianteActual.etiqueta} por $${Number(varianteActual.precio).toLocaleString()}`,
   );
 
+  // 🟢 LÓGICA PARA TRUNCAR LA DESCRIPCIÓN
+  const MAX_DESC_LENGTH = 120; // Ajusta este número si la quieres más larga o corta
+  const descripcionCompleta =
+    producto.descripcion ||
+    "Equipo industrial de alta precisión y rendimiento garantizado.";
+
+  const isLongDesc = descripcionCompleta.length > MAX_DESC_LENGTH;
+  const descripcionMostrar =
+    isExpanded || !isLongDesc
+      ? descripcionCompleta
+      : descripcionCompleta.substring(0, MAX_DESC_LENGTH).trim() + "...";
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-200">
       <div
@@ -105,13 +120,26 @@ export default function ProductDetailModal({ producto, isOpen, onClose }) {
           </h2>
 
           <p className="text-3xl font-black text-[#004532] mb-4">
-            ${Number(varianteActual.precio).toLocaleString()}
+            ${(Number(varianteActual.precio) || 0).toLocaleString()}
           </p>
 
-          <p className="text-sm text-[#3f4944] leading-relaxed mb-8">
-            {producto.descripcion ||
-              "Equipo industrial de alta precisión y rendimiento garantizado."}
-          </p>
+          {/* 🟢 DESCRIPCIÓN CON BOTÓN DE VER MÁS/MENOS */}
+          <div className="mb-8">
+            <p className="text-sm text-[#3f4944] leading-relaxed inline">
+              {descripcionMostrar}
+            </p>
+            {isLongDesc && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsExpanded(!isExpanded);
+                }}
+                className="text-[#004532] font-bold text-sm ml-2 hover:underline focus:outline-none"
+              >
+                {isExpanded ? "Ver menos" : "Ver más"}
+              </button>
+            )}
+          </div>
 
           {/* 🟢 SIEMPRE SE RENDERIZA EL SELECT */}
           <div className="mb-8">
@@ -130,7 +158,7 @@ export default function ProductDetailModal({ producto, isOpen, onClose }) {
             >
               {variantes.map((v) => (
                 <option key={v.id} value={v.id}>
-                  {v.etiqueta} - ${Number(v.precio).toLocaleString()}
+                  {v.etiqueta} - ${(Number(v.precio) || 0).toLocaleString()}
                 </option>
               ))}
             </select>

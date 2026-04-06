@@ -10,9 +10,6 @@ export default function ProductCard({ producto, main = true }) {
   const { addToCart } = useCart();
   const [opcionSeleccionada, setOpcionSeleccionada] = useState(1);
 
-  // En ProductCard.js, línea donde defines imageUrl
-
-  // En ProductCard.jsx y ProductDetailModal.jsx:
   const imageUrl =
     producto.imagen_url ||
     producto.imagen ||
@@ -54,6 +51,13 @@ export default function ProductCard({ producto, main = true }) {
     };
     addToCart(productoParaCarrito);
   };
+
+  // 🟢 TRUNCAR DESCRIPCIÓN (Ajusta el número 65 si quieres más o menos letras)
+  const MAX_LENGTH = 65;
+  const descripcionTruncada =
+    producto?.descripcion && producto.descripcion.length > MAX_LENGTH
+      ? producto.descripcion.substring(0, MAX_LENGTH).trim() + "..."
+      : producto?.descripcion;
 
   return (
     <>
@@ -99,9 +103,8 @@ export default function ProductCard({ producto, main = true }) {
                 {producto.categoria}
               </span>
             </div>
-            {/* EL PRECIO SE ACTUALIZA DINÁMICAMENTE */}
             <span className="text-sm sm:text-lg font-black text-[#131b2e] shrink-0">
-              ${Number(varianteActual.precio)?.toLocaleString()}
+              ${(Number(varianteActual.precio) || 0).toLocaleString()}
             </span>
           </div>
 
@@ -112,12 +115,12 @@ export default function ProductCard({ producto, main = true }) {
             {producto.nombre}
           </h3>
 
-          <p className="hidden sm:block text-[#3f4944] text-xs mb-4 line-clamp-2 leading-relaxed flex-1">
-            {producto.descripcion}
+          {/* 🟢 AQUI SE IMPRIME LA DESCRIPCION RECORTADA */}
+          <p className="hidden sm:block text-[#3f4944] text-xs mb-4 leading-relaxed flex-1">
+            {descripcionTruncada}
           </p>
 
           <div className="mt-auto flex flex-col gap-2">
-            {/* 🟢 EL SELECT SE RENDERIZA SIEMPRE Y SE MAPEA EL ARREGLO */}
             <select
               value={opcionSeleccionada}
               onChange={(e) => setOpcionSeleccionada(Number(e.target.value))}
@@ -126,7 +129,7 @@ export default function ProductCard({ producto, main = true }) {
             >
               {variantes.map((v) => (
                 <option key={v.id} value={v.id}>
-                  {v.etiqueta} - ${Number(v.precio).toLocaleString()}
+                  {v.etiqueta} - ${(Number(v.precio) || 0).toLocaleString()}
                 </option>
               ))}
             </select>
@@ -147,7 +150,9 @@ export default function ProductCard({ producto, main = true }) {
                 <Eye size={14} strokeWidth={2} /> Detalles
               </button>
               <a
-                href={`https://wa.me/525554946246?text=Hola, me interesa: ${encodeURIComponent(producto.nombre)} (${varianteActual.etiqueta}) por $${varianteActual.precio}`}
+                href={`https://wa.me/525554946246?text=Hola, me interesa: ${encodeURIComponent(
+                  producto.nombre,
+                )} (${varianteActual.etiqueta}) por $${varianteActual.precio}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-full py-2 bg-[#131b2e] text-white font-bold rounded-lg flex items-center justify-center gap-1 hover:bg-[#1e293b] transition-colors text-[9px] sm:text-[10px] tracking-widest uppercase shadow-sm"

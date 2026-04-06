@@ -11,6 +11,8 @@ import {
   Image as ImageIcon,
   UploadCloud,
   Link as LinkIcon,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 
 export default function GestionProductos() {
@@ -26,6 +28,10 @@ export default function GestionProductos() {
   const [useLocalImage, setUseLocalImage] = useState(false);
   const [imageFile, setImageFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState("");
+
+  // 🟢 ESTADOS PARA PAGINACIÓN
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10; // Puedes cambiar esto a 15 o 20 si prefieres
 
   const [formData, setFormData] = useState({
     nombre: "",
@@ -57,6 +63,20 @@ export default function GestionProductos() {
     if (resProd.data) setProductos(resProd.data);
     if (resCat.data) setCategorias(resCat.data);
     if (resMar.data) setMarcas(resMar.data);
+  };
+
+  // 🟢 LÓGICA DE PAGINACIÓN
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentProducts = productos.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(productos.length / itemsPerPage);
+
+  const nextPage = () => {
+    if (currentPage < totalPages) setCurrentPage(currentPage + 1);
+  };
+
+  const prevPage = () => {
+    if (currentPage > 1) setCurrentPage(currentPage - 1);
   };
 
   const openModal = (producto = null) => {
@@ -209,24 +229,20 @@ export default function GestionProductos() {
     }
   };
 
-  // 🟢 FUNCIÓN DE ELIMINAR MEJORADA 🟢
   const handleDelete = async (id) => {
     if (!window.confirm("¿Seguro que deseas eliminar este producto?")) return;
     try {
       const productoAEliminar = productos.find((p) => p.id === id);
 
-      // 1. Borrar imagen del bucket si pertenece a Supabase
       if (
         productoAEliminar?.imagen_url?.includes("supabase.co") &&
         productoAEliminar?.imagen_url?.includes("/productos/")
       ) {
         try {
-          // Extraemos de forma segura el nombre del archivo usando la API de URL nativa
           const url = new URL(productoAEliminar.imagen_url);
           const pathSegments = url.pathname.split("/");
-          let fileName = pathSegments[pathSegments.length - 1]; // Toma lo último
+          let fileName = pathSegments[pathSegments.length - 1];
 
-          // Decodificamos por si hay caracteres especiales o espacios (%20)
           fileName = decodeURIComponent(fileName);
 
           console.log("Intentando borrar archivo exacto:", fileName);
@@ -248,11 +264,15 @@ export default function GestionProductos() {
         }
       }
 
-      // 2. Eliminar de la base de datos
       const { error } = await supabase.from("productos").delete().eq("id", id);
       if (error) throw error;
 
       await fetchData();
+
+      // 🟢 Ajuste: Si eliminamos el último producto de una página, regresamos a la anterior
+      if (currentProducts.length === 1 && currentPage > 1) {
+        setCurrentPage(currentPage - 1);
+      }
     } catch (error) {
       alert("Error al eliminar el registro: " + error.message);
     }
@@ -279,96 +299,131 @@ export default function GestionProductos() {
       </div>
 
       {/* TABLA DE PRODUCTOS */}
-      <div className="bg-white rounded-xl shadow-sm border border-[#bec9c2]/30 overflow-x-auto">
-        <table className="w-full text-left text-sm whitespace-nowrap">
-          <thead className="bg-[#f2f3ff] text-[#3f4944] uppercase tracking-wider text-[10px] font-bold">
-            <tr>
-              <th className="p-4 rounded-tl-xl">Producto</th>
-              <th className="p-4">Categoría</th>
-              <th className="p-4">Precio Base</th>
-              <th className="p-4">Variantes</th>
-              <th className="p-4">Stock</th>
-              <th className="p-4 text-center rounded-tr-xl">Acciones</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-[#bec9c2]/20">
-            {productos.map((p) => (
-              <tr key={p.id} className="hover:bg-slate-50 transition-colors">
-                <td className="p-4 flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-slate-100 overflow-hidden border border-[#bec9c2]/20 shrink-0">
-                    {p.imagen_url ? (
-                      <img
-                        src={p.imagen_url}
-                        alt={p.nombre}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <ImageIcon className="w-full h-full p-2 text-slate-300" />
-                    )}
-                  </div>
-                  <div>
-                    <p className="font-bold text-[#131b2e] truncate max-w-[200px]">
-                      {p.nombre}
-                    </p>
-                    {p.destacado && (
-                      <span className="text-[9px] bg-yellow-100 text-yellow-800 font-bold px-2 py-0.5 rounded-full uppercase">
-                        Destacado
-                      </span>
-                    )}
-                  </div>
-                </td>
-                <td className="p-4 text-[#3f4944]">{p.categoria}</td>
-                <td className="p-4 font-bold text-[#004532]">
-                  ${Number(p.precio).toLocaleString()}
-                </td>
-                <td className="p-4">
-                  <div className="flex gap-1">
-                    <span
-                      className="w-2 h-2 rounded-full bg-[#004532]"
-                      title="Nivel 1 configurado"
-                    ></span>
-                    {p.precio_2 && (
-                      <span
-                        className="w-2 h-2 rounded-full bg-emerald-500"
-                        title="Nivel 2 configurado"
-                      ></span>
-                    )}
-                    {p.precio_3 && (
-                      <span
-                        className="w-2 h-2 rounded-full bg-teal-400"
-                        title="Nivel 3 configurado"
-                      ></span>
-                    )}
-                  </div>
-                </td>
-                <td className="p-4">{p.stock}</td>
-                <td className="p-4">
-                  <div className="flex justify-center gap-2">
-                    <button
-                      onClick={() => openModal(p)}
-                      className="p-2 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
-                    >
-                      <Pencil size={16} />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(p.id)}
-                      className="p-2 text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-            {productos.length === 0 && (
+      <div className="bg-white rounded-xl shadow-sm border border-[#bec9c2]/30 flex flex-col">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm whitespace-nowrap">
+            <thead className="bg-[#f2f3ff] text-[#3f4944] uppercase tracking-wider text-[10px] font-bold">
               <tr>
-                <td colSpan="6" className="p-8 text-center text-slate-400">
-                  No hay productos registrados.
-                </td>
+                <th className="p-4 rounded-tl-xl">Producto</th>
+                <th className="p-4">Categoría</th>
+                <th className="p-4">Precio Base</th>
+                <th className="p-4">Variantes</th>
+                <th className="p-4">Stock</th>
+                <th className="p-4 text-center rounded-tr-xl">Acciones</th>
               </tr>
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-[#bec9c2]/20">
+              {currentProducts.map((p) => (
+                <tr key={p.id} className="hover:bg-slate-50 transition-colors">
+                  <td className="p-4 flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-slate-100 overflow-hidden border border-[#bec9c2]/20 shrink-0">
+                      {p.imagen_url ? (
+                        <img
+                          src={p.imagen_url}
+                          alt={p.nombre}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <ImageIcon className="w-full h-full p-2 text-slate-300" />
+                      )}
+                    </div>
+                    <div>
+                      <p className="font-bold text-[#131b2e] truncate max-w-[200px]">
+                        {p.nombre}
+                      </p>
+                      {p.destacado && (
+                        <span className="text-[9px] bg-yellow-100 text-yellow-800 font-bold px-2 py-0.5 rounded-full uppercase">
+                          Destacado
+                        </span>
+                      )}
+                    </div>
+                  </td>
+                  <td className="p-4 text-[#3f4944]">{p.categoria}</td>
+                  <td className="p-4 font-bold text-[#004532]">
+                    ${Number(p.precio).toLocaleString()}
+                  </td>
+                  <td className="p-4">
+                    <div className="flex gap-1">
+                      <span
+                        className="w-2 h-2 rounded-full bg-[#004532]"
+                        title="Nivel 1 configurado"
+                      ></span>
+                      {p.precio_2 && (
+                        <span
+                          className="w-2 h-2 rounded-full bg-emerald-500"
+                          title="Nivel 2 configurado"
+                        ></span>
+                      )}
+                      {p.precio_3 && (
+                        <span
+                          className="w-2 h-2 rounded-full bg-teal-400"
+                          title="Nivel 3 configurado"
+                        ></span>
+                      )}
+                    </div>
+                  </td>
+                  <td className="p-4">{p.stock}</td>
+                  <td className="p-4">
+                    <div className="flex justify-center gap-2">
+                      <button
+                        onClick={() => openModal(p)}
+                        className="p-2 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
+                      >
+                        <Pencil size={16} />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(p.id)}
+                        className="p-2 text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+              {productos.length === 0 && (
+                <tr>
+                  <td colSpan="6" className="p-8 text-center text-slate-400">
+                    No hay productos registrados.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* 🟢 CONTROLES DE PAGINACIÓN */}
+        {productos.length > 0 && (
+          <div className="flex flex-col sm:flex-row items-center justify-between p-4 border-t border-[#bec9c2]/30 gap-4 bg-white rounded-b-xl">
+            <span className="text-xs text-[#3f4944] font-medium">
+              Mostrando {indexOfFirstItem + 1} a{" "}
+              {Math.min(indexOfLastItem, productos.length)} de{" "}
+              {productos.length} productos
+            </span>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={prevPage}
+                disabled={currentPage === 1}
+                className="p-2 rounded-lg border border-[#bec9c2]/30 text-[#131b2e] hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                <ChevronLeft size={16} />
+              </button>
+
+              <span className="text-xs font-bold px-3 text-[#131b2e]">
+                Página {currentPage} de {totalPages}
+              </span>
+
+              <button
+                onClick={nextPage}
+                disabled={currentPage === totalPages}
+                className="p-2 rounded-lg border border-[#bec9c2]/30 text-[#131b2e] hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                <ChevronRight size={16} />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* MODAL DE FORMULARIO */}

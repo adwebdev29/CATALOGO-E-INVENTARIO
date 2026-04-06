@@ -123,16 +123,15 @@ export default async function Home() {
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
           <div className="z-10 architectural-border pl-8">
             <span className="text-[10px] font-black uppercase tracking-[0.3em] text-[#004532] mb-4 block">
-              New Arrival 2024
+              Novedades 2026
             </span>
             <h1 className="text-5xl md:text-7xl font-black tracking-tighter text-[#131b2e] mt-2 leading-[0.9] uppercase">
               Tecnología <br />
               <span className="text-[#004532]">a tu Alcance</span>
             </h1>
             <p className="text-lg text-[#3f4944] mt-8 max-w-md leading-relaxed">
-              Curamos la mejor selección de hardware y accesorios de alta gama
-              para elevar tu estilo de vida digital con precisión
-              arquitectónica.
+              Tecnología que se integra contigo: accesorios funcionales, diseño
+              limpio y rendimiento confiable.
             </p>
             <div className="flex flex-wrap gap-4 mt-10">
               <Link
@@ -141,9 +140,6 @@ export default async function Home() {
               >
                 Explorar Catálogo
               </Link>
-              <button className="flex items-center gap-2 bg-[#f2f3ff] text-[#131b2e] px-10 py-4 rounded-lg font-bold hover:bg-[#dae2fd] transition-all text-xs tracking-widest uppercase">
-                Ver Gadgets
-              </button>
             </div>
           </div>
 
@@ -152,15 +148,13 @@ export default async function Home() {
               <img
                 alt="Premium Tech"
                 className="w-full h-full object-cover"
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuAnZAabGpcFWz-xIOGeUsAJnoZSFa3UyXRpwaayZVRIeBSe5o8WEOqDbQPohCWfycUjTrndT_-6rr9nPVmizWNfOiA3KreaEx3rOVSdt0cT8XAM-usoZT-MKWvLQB4_OQNIkEhFOh05xXUJrM-g6bbdCJYn9xT81Qajlt40GNFdHUHAh7Dy--2MN-BN_E2arLb_j1ilSrLjybLs7aYuB3GXjAaDRNWQI1bTuGYeB3M127CC4V95UOT95u6V36dGJEaYpMVbJAA5yDqa"
+                src="https://rurbeszsrsahjotyjojn.supabase.co/storage/v1/object/public/productos/WOOX-AUDIFONOS-HERO.webp"
               />
             </div>
             <div className="absolute -bottom-4 -left-4 bg-[#004532] p-6 shadow-xl border border-white/10 max-w-[240px]">
-              <p className="text-sm font-bold text-white">
-                Ultra Noise Canceling
-              </p>
+              <p className="text-sm font-bold text-white">Woox Mx0052</p>
               <p className="text-[10px] text-white/70 mt-1 uppercase tracking-widest">
-                Disponible en Accesorios
+                Alta calidad en cada detalle
               </p>
             </div>
           </div>
@@ -169,7 +163,7 @@ export default async function Home() {
         {/* Vertical label */}
         <div className="absolute right-8 top-1/2 -translate-y-1/2 hidden xl:block">
           <div className="rotate-90 origin-center whitespace-nowrap text-[10px] font-black uppercase tracking-[0.4em] text-[#131b2e]/20">
-            Editorial Collection — 2024
+            Editorial Collection — 2026
           </div>
         </div>
       </section>
@@ -183,7 +177,7 @@ export default async function Home() {
                 Categorías <span className="text-[#004532]">Populares</span>
               </h2>
               <p className="text-sm text-[#3f4944] mt-2">
-                Navega por nuestra selección curada.
+                Las categorías más buscadas por nuestros clientes.
               </p>
             </div>
             <Link
@@ -246,45 +240,48 @@ export default async function Home() {
       {/* ── FEATURED PRODUCTS SLIDER ── */}
       <MainProducts productosDestacados={displayProducts} />
 
-      {/* ── ABOUT (CON TU IMAGEN ORIGINAL) ── */}
       <section className="px-8 py-32 bg-[#131b2e] text-white overflow-hidden relative border-t border-white/5">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center gap-20 relative z-10">
           <div className="flex-1 architectural-border pl-10 border-[#004532]">
             <h2 className="text-4xl md:text-5xl font-black tracking-tight leading-tight uppercase">
-              Sobre <br />
-              <span className="text-[#8bd6b6]">Woox</span>
+              Más que <br />
+              <span className="text-[#8bd6b6]">accesorios</span>
             </h2>
+
             <p className="mt-8 text-lg text-slate-400 leading-relaxed max-w-xl">
-              Nacimos con la visión de simplificar el acceso a lo último en
-              tecnología global mediante una curaduría basada en la excelencia
-              arquitectónica y el desempeño profesional.
+              En WOOX nos enfocamos en productos que te ayuden a ser más
+              eficiente. Buena calidad, buen diseño y desempeño confiable en el
+              día a día.
             </p>
+
             <div className="grid grid-cols-2 gap-12 mt-16">
               <div className="border-l border-white/10 pl-6">
-                <p className="text-5xl font-black text-[#8bd6b6]">10k+</p>
+                <p className="text-5xl font-black text-[#8bd6b6]">
+                  Calidad real{" "}
+                </p>
                 <p className="text-[10px] font-bold text-slate-500 mt-2 uppercase tracking-[0.2em]">
-                  Productos Entregados
+                  Productos hechos con los mejores materiales
                 </p>
               </div>
+
               <div className="border-l border-white/10 pl-6">
-                <p className="text-5xl font-black text-[#8bd6b6]">24/7</p>
-                <p className="text-[10px] font-bold text-slate-500 mt-2 uppercase tracking-[0.2em]">
-                  Soporte Especializado
+                <p className="text-5xl font-black text-[#8bd6b6]">
+                  Diseños increibles
                 </p>
+                <p className="text-[10px] font-bold text-slate-500 mt-2 uppercase tracking-[0.2em]"></p>
               </div>
             </div>
-            <Link
-              href="/nosotros"
-              className="inline-flex items-center gap-2 mt-10 border border-white/20 text-white px-8 py-3 font-bold text-xs tracking-widest uppercase hover:bg-white hover:text-[#131b2e] transition-all"
-            >
-              Conoce más
+
+            <button className="inline-flex items-center gap-2 mt-10 border border-white/20 text-white px-8 py-3 font-bold text-xs tracking-widest uppercase hover:bg-white hover:text-[#131b2e] transition-all">
+              Explorar catálogo
               <ArrowRight size={16} />
-            </Link>
+            </button>
           </div>
 
+          {/* IMAGEN */}
           <div className="flex-1 w-full h-[500px] bg-slate-900 overflow-hidden relative shadow-2xl">
             <img
-              alt="Tech Workshop"
+              alt="Accesorios WOOX"
               className="w-full h-full object-cover opacity-40 grayscale hover:grayscale-0 transition-all duration-700"
               src="https://lh3.googleusercontent.com/aida-public/AB6AXuB3i-kpV4yrfyPUkZyx2hISD0NU4TW5Jwk7eIq12wvG3NUjMXLJ7QtYloOZj7xk4oH-08v6Wmcoy-yaVCRh78oX_-fgnYDU4WYTCCgEA1Xw5BqYu1gi5liBqrBwDlYOHaTw8RiVlwaxRrIa5nxOuwsBOQLAh2trlofEr4kKSglzyIOVg3A5Zv4Dr8-hYHStu7xsDCqwn1LyBfj41y7DTuWaRE-auc7GSJ6q4o5rvrKS3m6mcObqb4ChpzVbMPQAiu52w6UMqahINNvf"
             />
@@ -293,7 +290,7 @@ export default async function Home() {
         </div>
 
         <div className="absolute left-8 bottom-32 rotate-180 [writing-mode:vertical-lr] text-[10px] font-black uppercase tracking-[0.5em] text-white/5 pointer-events-none">
-          Architectural Precision • Superior Curation
+          Accesorios Móviles • Cables y Carga • Audio
         </div>
       </section>
     </main>
