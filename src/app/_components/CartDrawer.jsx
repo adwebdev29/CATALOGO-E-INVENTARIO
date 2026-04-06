@@ -7,6 +7,7 @@ import {
   Minus,
   MessageCircle,
   ShoppingBag,
+  Mail,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -61,12 +62,13 @@ export default function CartDrawer() {
               <p className="text-lg font-bold text-[#3f4944]">
                 El carrito está vacío
               </p>
-              <button
+              <Link
+                href="/catalogo"
                 onClick={() => setIsCartOpen(false)}
-                className="mt-4 px-6 py-3 bg-[#131b2e] text-white font-bold text-xs uppercase tracking-widest rounded-xl hover:bg-[#004532] transition-colors shadow-md"
+                className="mt-4 px-6 py-3 bg-[#131b2e] text-white font-bold text-xs uppercase tracking-widest rounded-xl hover:bg-[#004532] transition-colors shadow-md inline-block text-center"
               >
                 Explorar Catálogo
-              </button>
+              </Link>
             </div>
           ) : (
             <ul className="space-y-4">
@@ -194,9 +196,10 @@ export default function CartDrawer() {
               <Link
                 href="/contacto"
                 onClick={() => setIsCartOpen(false)}
-                className="w-full py-4 bg-[#131b2e] hover:bg-[#004532] text-white font-bold uppercase tracking-widest text-xs flex items-center justify-center transition-all rounded-xl shadow-md hover:-translate-y-0.5"
+                className="w-full py-4 bg-[#131b2e] hover:bg-[#004532] text-white font-bold uppercase tracking-widest text-xs flex items-center justify-center gap-2 transition-all rounded-xl shadow-md hover:-translate-y-0.5"
               >
-                Solicitar Cotización Formal
+                <Mail size={18} />
+                Pedir por email
               </Link>
               <a
                 href={`https://wa.me/525554946246?text=${getWhatsAppMessage()}`}

@@ -271,10 +271,13 @@ export default async function Home() {
               </div>
             </div>
 
-            <button className="inline-flex items-center gap-2 mt-10 border border-white/20 text-white px-8 py-3 font-bold text-xs tracking-widest uppercase hover:bg-white hover:text-[#131b2e] transition-all">
+            <Link
+              href="/catalogo"
+              className="inline-flex items-center gap-2 mt-10 border border-white/20 text-white px-8 py-3 font-bold text-xs tracking-widest uppercase hover:bg-white hover:text-[#131b2e] transition-all"
+            >
               Explorar catálogo
               <ArrowRight size={16} />
-            </button>
+            </Link>
           </div>
 
           {/* IMAGEN */}
