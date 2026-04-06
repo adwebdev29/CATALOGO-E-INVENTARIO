@@ -67,7 +67,7 @@ export default function DashboardLayout({ children }) {
 
   return (
     <html lang="es">
-      <body className="bg-slate-50 flex h-screen overflow-hidden text-slate-800 antialiased">
+      <body className="bg-slate-50 flex min-h-screen">
         {!user ? (
           <div className="w-full flex-1 flex items-center justify-center bg-slate-50 text-emerald-900 font-bold text-xl">
             Cargando interfaz...
