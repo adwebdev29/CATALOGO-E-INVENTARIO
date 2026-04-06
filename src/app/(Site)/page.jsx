@@ -242,23 +242,21 @@ export default async function Home() {
 
       <section className="px-8 py-32 bg-[#131b2e] text-white overflow-hidden relative border-t border-white/5">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center gap-20 relative z-10">
-          <div className="flex-1 architectural-border pl-6 md:pl-10 border-[#004532]">
+          <div className="flex-1 architectural-border pl-10 border-[#004532]">
             <h2 className="text-4xl md:text-5xl font-black tracking-tight leading-tight uppercase">
               Más que <br />
               <span className="text-[#8bd6b6]">accesorios</span>
             </h2>
 
-            <p className="mt-6 md:mt-8 text-base md:text-lg text-slate-400 leading-relaxed max-w-xl">
+            <p className="mt-8 text-lg text-slate-400 leading-relaxed max-w-xl">
               En WOOX nos enfocamos en productos que te ayuden a ser más
               eficiente. Buena calidad, buen diseño y desempeño confiable en el
               día a día.
             </p>
 
-            {/* 🟢 AQUI ESTÁ LA MAGIA: grid-cols-1 en móvil, md:grid-cols-2 en escritorio */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-12 mt-12 md:mt-16">
-              <div className="border-l border-white/10 pl-4 md:pl-6">
-                {/* 🟢 Redujimos el texto a 3xl en móvil y 5xl en PC */}
-                <p className="text-3xl lg:text-5xl font-black text-[#8bd6b6]">
+            <div className="grid grid-cols-2 gap-12 mt-16">
+              <div className="border-l border-white/10 pl-6">
+                <p className="text-5xl font-black text-[#8bd6b6]">
                   Calidad real{" "}
                 </p>
                 <p className="text-[10px] font-bold text-slate-500 mt-2 uppercase tracking-[0.2em]">
@@ -266,26 +264,22 @@ export default async function Home() {
                 </p>
               </div>
 
-              <div className="border-l border-white/10 pl-4 md:pl-6">
-                {/* 🟢 Redujimos el texto a 3xl en móvil y 5xl en PC */}
-                <p className="text-3xl lg:text-5xl font-black text-[#8bd6b6]">
-                  Diseños increíbles
+              <div className="border-l border-white/10 pl-6">
+                <p className="text-5xl font-black text-[#8bd6b6]">
+                  Diseños increibles
                 </p>
-                <p className="text-[10px] font-bold text-slate-500 mt-2 uppercase tracking-[0.2em]">
-                  Estética y funcionalidad
-                </p>
+                <p className="text-[10px] font-bold text-slate-500 mt-2 uppercase tracking-[0.2em]"></p>
               </div>
             </div>
 
             <button className="inline-flex items-center gap-2 mt-10 border border-white/20 text-white px-8 py-3 font-bold text-xs tracking-widest uppercase hover:bg-white hover:text-[#131b2e] transition-all">
               Explorar catálogo
-              {/* Nota: Asegúrate de tener importado ArrowRight de lucide-react */}
               <ArrowRight size={16} />
             </button>
           </div>
 
           {/* IMAGEN */}
-          <div className="flex-1 w-full h-[350px] md:h-[500px] bg-slate-900 overflow-hidden relative shadow-2xl mt-10 md:mt-0">
+          <div className="flex-1 w-full h-[500px] bg-slate-900 overflow-hidden relative shadow-2xl">
             <img
               alt="Accesorios WOOX"
               className="w-full h-full object-cover opacity-40 grayscale hover:grayscale-0 transition-all duration-700"
@@ -295,7 +289,7 @@ export default async function Home() {
           </div>
         </div>
 
-        <div className="absolute left-4 md:left-8 bottom-32 rotate-180 [writing-mode:vertical-lr] text-[10px] font-black uppercase tracking-[0.5em] text-white/5 pointer-events-none hidden sm:block">
+        <div className="absolute left-8 bottom-32 rotate-180 [writing-mode:vertical-lr] text-[10px] font-black uppercase tracking-[0.5em] text-white/5 pointer-events-none">
           Accesorios Móviles • Cables y Carga • Audio
         </div>
       </section>

@@ -64,7 +64,7 @@ export default function ProductCard({ producto, main = true }) {
       <article
         className={
           main
-            ? "min-w-[85%] sm:min-w-[45%] lg:min-w-[30%] snap-center group flex flex-col bg-white overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 border border-[#bec9c2]/20 shrink-0 rounded-xl"
+            ? "w-[280px] md:w-[320px] shrink-0 snap-center group flex flex-col bg-white overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 border border-[#bec9c2]/20 rounded-xl"
             : "h-full group flex flex-col bg-white overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 border border-[#bec9c2]/20 rounded-xl"
         }
       >
