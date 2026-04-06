@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import Swal from "sweetalert2";
 import { supabase } from "@/app/_lib/supabase/supabase";
 import {
   Plus,
@@ -13,6 +14,7 @@ import {
   Link as LinkIcon,
   ChevronLeft,
   ChevronRight,
+  Search, // 🟢 Agregamos el ícono de búsqueda
 } from "lucide-react";
 
 export default function GestionProductos() {
@@ -24,14 +26,19 @@ export default function GestionProductos() {
   const [editingId, setEditingId] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  // 🟢 ESTADOS PARA LA SUBIDA DE IMÁGENES
+  // 🟢 ESTADOS PARA LOS FILTROS
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterCategoria, setFilterCategoria] = useState("");
+  const [filterMarca, setFilterMarca] = useState("");
+
+  // ESTADOS PARA LA SUBIDA DE IMÁGENES
   const [useLocalImage, setUseLocalImage] = useState(false);
   const [imageFile, setImageFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState("");
 
-  // 🟢 ESTADOS PARA PAGINACIÓN
+  // ESTADOS PARA PAGINACIÓN
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10; // Puedes cambiar esto a 15 o 20 si prefieres
+  const itemsPerPage = 10;
 
   const [formData, setFormData] = useState({
     nombre: "",
@@ -55,7 +62,8 @@ export default function GestionProductos() {
 
   const fetchData = async () => {
     const [resProd, resCat, resMar] = await Promise.all([
-      supabase.from("productos").select("*").order("id", { ascending: false }),
+      // 🟢 ORDEN POR ID ASCENDENTE (del más antiguo/bajo al más nuevo/alto)
+      supabase.from("productos").select("*").order("id", { ascending: true }),
       supabase.from("categorias").select("nombre").order("nombre"),
       supabase.from("marcas").select("nombre").order("nombre"),
     ]);
@@ -65,11 +73,31 @@ export default function GestionProductos() {
     if (resMar.data) setMarcas(resMar.data);
   };
 
-  // 🟢 LÓGICA DE PAGINACIÓN
+  // 🟢 LÓGICA DE FILTRADO
+  const filteredProducts = productos.filter((p) => {
+    const matchSearch = p.nombre
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase());
+    const matchCategoria = filterCategoria
+      ? p.categoria === filterCategoria
+      : true;
+    const matchMarca = filterMarca ? p.marca === filterMarca : true;
+    return matchSearch && matchCategoria && matchMarca;
+  });
+
+  // 🟢 LÓGICA DE PAGINACIÓN (Aplicada sobre los productos ya filtrados)
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentProducts = productos.slice(indexOfFirstItem, indexOfLastItem);
-  const totalPages = Math.ceil(productos.length / itemsPerPage);
+  const currentProducts = filteredProducts.slice(
+    indexOfFirstItem,
+    indexOfLastItem,
+  );
+  const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
+
+  // 🟢 Si cambian los filtros, regresamos a la página 1 para evitar ver listas vacías
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, filterCategoria, filterMarca]);
 
   const nextPage = () => {
     if (currentPage < totalPages) setCurrentPage(currentPage + 1);
@@ -223,7 +251,12 @@ export default function GestionProductos() {
       await fetchData();
       closeModal();
     } catch (error) {
-      alert("Error al guardar: " + error.message);
+      Swal.fire({
+        title: "Error al guardar:",
+        text: error.message,
+        icon: "error",
+        confirmButtonColor: "#d33",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -253,9 +286,14 @@ export default function GestionProductos() {
 
           if (storageError) {
             console.error("Error de Supabase Storage:", storageError.message);
-            alert(
-              "El producto se eliminará, pero la imagen no se pudo borrar del bucket.",
-            );
+
+            Swal.fire({
+              title: "Producto eliminado",
+              text: "El registro se eliminó correctamente, pero hubo un detalle al intentar borrar la imagen del servidor. El espacio se liberará manualmente después.",
+              icon: "warning",
+              confirmButtonColor: "#131b2e", // Tu azul oscuro de WOOX
+              confirmButtonText: "Entendido",
+            });
           } else {
             console.log("Imagen borrada del bucket exitosamente:", data);
           }
@@ -269,19 +307,23 @@ export default function GestionProductos() {
 
       await fetchData();
 
-      // 🟢 Ajuste: Si eliminamos el último producto de una página, regresamos a la anterior
       if (currentProducts.length === 1 && currentPage > 1) {
         setCurrentPage(currentPage - 1);
       }
     } catch (error) {
-      alert("Error al eliminar el registro: " + error.message);
+      Swal.fire({
+        title: "Error al eliminar el registro: ",
+        text: error.message,
+        icon: "error",
+        confirmButtonColor: "#d33",
+      });
     }
   };
 
   return (
     <div className="max-w-7xl mx-auto">
       {/* HEADER DASHBOARD */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4 border-b border-[#bec9c2]/30 pb-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4 border-b border-[#bec9c2]/30 pb-6">
         <div>
           <h1 className="text-2xl font-black text-[#131b2e] flex items-center gap-2">
             <Package className="text-[#004532]" /> Catálogo de Productos
@@ -296,6 +338,49 @@ export default function GestionProductos() {
         >
           <Plus size={16} /> Agregar Producto
         </button>
+      </div>
+
+      {/* 🟢 BARRA DE FILTROS */}
+      <div className="bg-white p-4 rounded-xl shadow-sm border border-[#bec9c2]/30 mb-6 flex flex-col md:flex-row gap-4 items-center">
+        <div className="relative flex-1 w-full">
+          <Search
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+            size={18}
+          />
+          <input
+            type="text"
+            placeholder="Buscar por nombre..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 bg-[#f8faf9] border border-[#bec9c2]/40 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#004532] transition-all"
+          />
+        </div>
+        <div className="flex gap-4 w-full md:w-auto">
+          <select
+            value={filterCategoria}
+            onChange={(e) => setFilterCategoria(e.target.value)}
+            className="w-full md:w-48 py-2 px-3 bg-[#f8faf9] border border-[#bec9c2]/40 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#004532] text-[#3f4944] transition-all cursor-pointer"
+          >
+            <option value="">Todas las Categorías</option>
+            {categorias.map((c) => (
+              <option key={c.nombre} value={c.nombre}>
+                {c.nombre}
+              </option>
+            ))}
+          </select>
+          <select
+            value={filterMarca}
+            onChange={(e) => setFilterMarca(e.target.value)}
+            className="w-full md:w-48 py-2 px-3 bg-[#f8faf9] border border-[#bec9c2]/40 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#004532] text-[#3f4944] transition-all cursor-pointer"
+          >
+            <option value="">Todas las Marcas</option>
+            {marcas.map((m) => (
+              <option key={m.nombre} value={m.nombre}>
+                {m.nombre}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
       {/* TABLA DE PRODUCTOS */}
@@ -381,10 +466,10 @@ export default function GestionProductos() {
                   </td>
                 </tr>
               ))}
-              {productos.length === 0 && (
+              {filteredProducts.length === 0 && (
                 <tr>
                   <td colSpan="6" className="p-8 text-center text-slate-400">
-                    No hay productos registrados.
+                    No se encontraron productos con esos filtros.
                   </td>
                 </tr>
               )}
@@ -393,12 +478,12 @@ export default function GestionProductos() {
         </div>
 
         {/* 🟢 CONTROLES DE PAGINACIÓN */}
-        {productos.length > 0 && (
+        {filteredProducts.length > 0 && (
           <div className="flex flex-col sm:flex-row items-center justify-between p-4 border-t border-[#bec9c2]/30 gap-4 bg-white rounded-b-xl">
             <span className="text-xs text-[#3f4944] font-medium">
               Mostrando {indexOfFirstItem + 1} a{" "}
-              {Math.min(indexOfLastItem, productos.length)} de{" "}
-              {productos.length} productos
+              {Math.min(indexOfLastItem, filteredProducts.length)} de{" "}
+              {filteredProducts.length} productos
             </span>
 
             <div className="flex items-center gap-2">

@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { supabase } from "../_lib/supabase/supabase";
-
+import Swal from "sweetalert2";
 export default function ProductFormModal({
   isOpen,
   onClose,
@@ -68,7 +68,15 @@ export default function ProductFormModal({
         if (error) throw error;
         if (!data || data.length === 0)
           throw new Error("Acción bloqueada por RLS.");
-        alert("✅ Producto actualizado");
+        // Para Actualizado
+        Swal.fire({
+          title: "¡Logrado!",
+          text: "El producto ha sido actualizado correctamente.",
+          icon: "success",
+          timer: 2000,
+          showConfirmButton: false,
+          confirmButtonColor: "#004532",
+        });
       } else {
         const { data, error } = await supabase
           .from("productos")
@@ -77,12 +85,25 @@ export default function ProductFormModal({
         if (error) throw error;
         if (!data || data.length === 0)
           throw new Error("Acción bloqueada por RLS.");
-        alert("✅ Producto creado");
+        // Para Creado
+        Swal.fire({
+          title: "¡Producto Creado!",
+          text: "El nuevo artículo ya está disponible en el catálogo.",
+          icon: "success",
+          timer: 2000,
+          showConfirmButton: false,
+          confirmButtonColor: "#004532",
+        });
       }
       onSaveSuccess(); // Le avisa a la página principal que recargue la tabla
       onClose(); // Cierra el modal
     } catch (error) {
-      alert("❌ " + error.message);
+      Swal.fire({
+        title: "Ups, algo salió mal",
+        text: error.message,
+        icon: "error",
+        confirmButtonColor: "#d33",
+      });
     } finally {
       setCargando(false);
     }

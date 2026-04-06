@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useCart } from "@/app/_context/CartContext";
-
+import Swal from "sweetalert2";
 import {
   CheckCircle,
   ShoppingCart,
@@ -41,7 +41,12 @@ export default function Contacto() {
   const handleEmailSubmit = async (e) => {
     e.preventDefault();
     if (!form.nombre || !form.email) {
-      alert("Por favor completa tu nombre y correo electrónico.");
+      Swal.fire({
+        title: "Campos incompletos",
+        text: "Por favor completa tu nombre y correo electrónico para continuar.",
+        icon: "warning",
+        confirmButtonColor: "#131b2e",
+      });
       return;
     }
 
@@ -77,12 +82,20 @@ export default function Contacto() {
       if (res.ok) {
         setEnviado(true);
       } else {
-        alert(
-          "Hubo un problema al enviar el correo. Por favor, intenta de nuevo o contáctanos por WhatsApp.",
-        );
+        Swal.fire({
+          title: "Error de envío",
+          text: "Hubo un problema al enviar el correo. Por favor, intenta de nuevo o contáctanos directamente por WhatsApp.",
+          icon: "error",
+          confirmButtonColor: "#d33",
+        });
       }
     } catch (error) {
-      alert("Error de red. Verifica tu conexión a internet.");
+      Swal.fire({
+        title: "Sin conexión",
+        text: "Error de red. Por favor, verifica tu conexión a internet e intenta de nuevo.",
+        icon: "question",
+        confirmButtonColor: "#131b2e",
+      });
     }
 
     setEnviando(false);

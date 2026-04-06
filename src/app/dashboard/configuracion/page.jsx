@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
+import Swal from "sweetalert2";
 import { supabase } from "@/app/_lib/supabase/supabase";
 import {
   Star,
@@ -10,6 +11,10 @@ import {
   Database,
   DownloadCloud,
   ServerCog,
+  KeyRound,
+  ChevronDown,
+  ChevronUp,
+  User, // 🟢 Importamos ícono para el nombre de usuario
 } from "lucide-react";
 
 export default function ConfiguracionPage() {
@@ -17,7 +22,39 @@ export default function ConfiguracionPage() {
   const [nuevaCategoria, setNuevaCategoria] = useState("");
   const [isPopularNueva, setIsPopularNueva] = useState(false);
   const [loadingIds, setLoadingIds] = useState([]);
-  const [isBackupLoading, setIsBackupLoading] = useState(false); // 🟢 Estado para el botón de respaldo
+  const [isBackupLoading, setIsBackupLoading] = useState(false);
+
+  const [showCategorias, setShowCategorias] = useState(false);
+
+  // 🟢 ESTADOS PARA EL PERFIL (NOMBRE)
+  const [currentUserId, setCurrentUserId] = useState(null);
+  const [currentName, setCurrentName] = useState("");
+  const [isNameLoading, setIsNameLoading] = useState(false);
+
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [isPasswordLoading, setIsPasswordLoading] = useState(false);
+
+  // 🟢 TRAER DATOS DEL USUARIO ACTUAL
+  const fetchMiPerfil = useCallback(async () => {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (user) {
+      setCurrentUserId(user.id);
+      // Buscamos su nombre en la tabla perfiles
+      const { data, error } = await supabase
+        .from("perfiles")
+        .select("nombre")
+        .eq("id", user.id)
+        .single();
+
+      if (data && !error) {
+        setCurrentName(data.nombre);
+      }
+    }
+  }, []);
 
   const fetchCategorias = useCallback(async () => {
     const { data, error } = await supabase
@@ -29,7 +66,8 @@ export default function ConfiguracionPage() {
 
   useEffect(() => {
     fetchCategorias();
-  }, [fetchCategorias]);
+    fetchMiPerfil(); // 🟢 Cargamos el perfil al iniciar
+  }, [fetchCategorias, fetchMiPerfil]);
 
   const handleAgregarCategoria = async (e) => {
     e.preventDefault();
@@ -53,8 +91,14 @@ export default function ConfiguracionPage() {
       setNuevaCategoria("");
       setIsPopularNueva(false);
       await fetchCategorias();
+      setShowCategorias(true);
     } catch (error) {
-      alert("❌ Error: " + error.message);
+      Swal.fire({
+        title: "Ups, algo salió mal",
+        text: error.message,
+        icon: "error",
+        confirmButtonColor: "#d33",
+      });
     }
   };
 
@@ -74,7 +118,12 @@ export default function ConfiguracionPage() {
         ),
       );
     } catch (error) {
-      alert("❌ Error al actualizar estado popular: " + error.message);
+      Swal.fire({
+        title: "Error al actualizar estado popular:",
+        text: error.message,
+        icon: "error",
+        confirmButtonColor: "#d33",
+      });
     } finally {
       setLoadingIds((prev) => prev.filter((loadingId) => loadingId !== id));
     }
@@ -92,33 +141,124 @@ export default function ConfiguracionPage() {
       if (error) throw error;
       await fetchCategorias();
     } catch (error) {
-      alert("❌ Error al eliminar: " + error.message);
+      Swal.fire({
+        title: "Error al eliminar:",
+        text: error.message,
+        icon: "error",
+        confirmButtonColor: "#d33",
+      });
     }
   };
 
-  // 🟢 NUEVA FUNCIÓN: Descargar Respaldo Manual
   const handleDescargarRespaldo = async () => {
     setIsBackupLoading(true);
     try {
-      // Llamamos a la API con el parámetro download=true
       const response = await fetch("/api/backup?download=true");
       if (!response.ok) throw new Error("Fallo al generar el respaldo");
 
-      // Convertimos la respuesta a un Blob (archivo) y forzamos la descarga
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      // Nombre dinámico con la fecha actual
       a.download = `woox_backup_${new Date().toISOString().split("T")[0]}.json`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
     } catch (error) {
-      alert("❌ Error al descargar el respaldo: " + error.message);
+      Swal.fire({
+        title: "Error al descargar el respaldo:",
+        text: error.message,
+        icon: "error",
+        confirmButtonColor: "#d33",
+      });
     } finally {
       setIsBackupLoading(false);
+    }
+  };
+
+  // 🟢 NUEVA FUNCIÓN: Actualizar Nombre
+  const handleChangeName = async (e) => {
+    e.preventDefault();
+    if (!currentName.trim() || !currentUserId) return;
+
+    setIsNameLoading(true);
+    try {
+      const { error } = await supabase
+        .from("perfiles")
+        .update({ nombre: currentName.trim() })
+        .eq("id", currentUserId);
+
+      if (error) throw error;
+
+      Swal.fire({
+        icon: "success",
+        title: "Nombre actualizado",
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+      });
+    } catch (error) {
+      Swal.fire({
+        title: "Error al actualizar el nombre: ",
+        text: error.message,
+        icon: "error",
+        confirmButtonColor: "#d33",
+      });
+    } finally {
+      setIsNameLoading(false);
+    }
+  };
+
+  const handleChangePassword = async (e) => {
+    e.preventDefault();
+
+    if (newPassword !== confirmPassword) {
+      Swal.fire({
+        title: "Validación de contraseña",
+        text: "Las contraseñas no coinciden. Por favor, verifícalas e intenta de nuevo.",
+        icon: "warning",
+        confirmButtonColor: "#131b2e", // Tu azul oscuro de WOOX
+      });
+      return;
+    }
+    if (newPassword.length < 6) {
+      Swal.fire({
+        title: "Contraseña muy corta",
+        text: "Por seguridad, la contraseña debe tener al menos 6 caracteres.",
+        icon: "info",
+        confirmButtonColor: "#131b2e",
+      });
+      return;
+    }
+
+    setIsPasswordLoading(true);
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword,
+      });
+
+      if (error) throw error;
+
+      Swal.fire({
+        title: "¡Seguridad Actualizada!",
+        text: "Tu contraseña ha sido cambiada con éxito.",
+        icon: "success",
+        confirmButtonColor: "#004532", // Tu verde WOOX
+      });
+      setNewPassword("");
+      setConfirmPassword("");
+    } catch (error) {
+      Swal.fire({
+        title: "Error al actualizar la contraseña:",
+        text: error.message,
+        icon: "error",
+        confirmButtonColor: "#d33",
+      });
+    } finally {
+      setIsPasswordLoading(false);
     }
   };
 
@@ -185,7 +325,7 @@ export default function ConfiguracionPage() {
         </div>
 
         {/* ── LISTADO DE CATEGORÍAS ── */}
-        <div className="lg:col-span-7 bg-white p-6 rounded-2xl shadow-sm border border-[#bec9c2]/30">
+        <div className="lg:col-span-7 bg-white p-6 rounded-2xl shadow-sm border border-[#bec9c2]/30 h-fit">
           <div className="flex justify-between items-end mb-4 border-b border-[#bec9c2]/20 pb-3">
             <h3 className="text-xl font-black text-[#131b2e]">
               Gestión de Categorías
@@ -195,85 +335,195 @@ export default function ConfiguracionPage() {
             </span>
           </div>
 
-          <p className="text-xs text-[#3f4944] mb-4">
-            Haz clic en la{" "}
-            <Star
-              size={12}
-              className="inline text-yellow-500 fill-yellow-500 mx-1"
-            />{" "}
-            para mostrar u ocultar la categoría en la página de inicio.
-          </p>
-
-          <ul className="divide-y divide-[#bec9c2]/10">
-            {categorias.map((cat) => {
-              const isLoading = loadingIds.includes(cat.id);
-              return (
-                <li
-                  key={cat.id}
-                  className="py-4 flex justify-between items-center group"
-                >
-                  <div className="flex items-center gap-3">
-                    <button
-                      onClick={() => togglePopular(cat.id, cat.popular)}
-                      disabled={isLoading}
-                      title={
-                        cat.popular ? "Quitar de Inicio" : "Destacar en Inicio"
-                      }
-                      className={`p-2 rounded-full transition-all ${
-                        isLoading
-                          ? "opacity-50 cursor-not-allowed"
-                          : "hover:bg-slate-100"
-                      }`}
-                    >
-                      {cat.popular ? (
-                        <Star
-                          size={22}
-                          className="text-yellow-500 fill-yellow-500 drop-shadow-sm"
-                        />
-                      ) : (
-                        <StarOff
-                          size={22}
-                          className="text-slate-300 hover:text-yellow-400"
-                        />
-                      )}
-                    </button>
-
-                    <div>
-                      <span className="font-bold text-[#131b2e] text-sm uppercase tracking-wider block">
-                        {cat.nombre}
-                      </span>
-                      <span className="text-[10px] text-[#3f4944]">
-                        {cat.popular ? "Visible en Inicio" : "Oculta en Inicio"}
-                      </span>
-                    </div>
-                  </div>
-
-                  <button
-                    onClick={() => handleEliminarCategoria(cat.id)}
-                    className="text-red-400 hover:text-red-600 bg-red-50 hover:bg-red-100 p-2 rounded-lg transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
-                    title="Eliminar Categoría"
-                  >
-                    <Trash2 size={18} />
-                  </button>
-                </li>
-              );
-            })}
-            {categorias.length === 0 && (
-              <div className="text-center py-10">
-                <LayoutGrid size={48} className="text-slate-200 mx-auto mb-3" />
-                <p className="text-slate-500 font-bold">
-                  No hay categorías registradas.
-                </p>
-                <p className="text-xs text-slate-400 mt-1">
-                  Crea tu primera categoría a la izquierda.
-                </p>
-              </div>
+          <button
+            onClick={() => setShowCategorias(!showCategorias)}
+            className="w-full py-3 mb-2 bg-[#f8faf9] hover:bg-[#f2f3ff] border border-[#bec9c2]/30 text-[#131b2e] font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-2 rounded-lg transition-colors"
+          >
+            {showCategorias ? (
+              <>
+                <ChevronUp size={16} /> Ocultar Lista de Categorías
+              </>
+            ) : (
+              <>
+                <ChevronDown size={16} /> Ver Todas las Categorías (
+                {categorias.length})
+              </>
             )}
-          </ul>
+          </button>
+
+          {showCategorias && (
+            <div className="animate-in slide-in-from-top-2 fade-in duration-300 mt-4">
+              <p className="text-xs text-[#3f4944] mb-4">
+                Haz clic en la{" "}
+                <Star
+                  size={12}
+                  className="inline text-yellow-500 fill-yellow-500 mx-1"
+                />{" "}
+                para mostrar u ocultar la categoría en la página de inicio.
+              </p>
+
+              <ul className="divide-y divide-[#bec9c2]/10 max-h-[400px] overflow-y-auto pr-2">
+                {categorias.map((cat) => {
+                  const isLoading = loadingIds.includes(cat.id);
+                  return (
+                    <li
+                      key={cat.id}
+                      className="py-4 flex justify-between items-center group"
+                    >
+                      <div className="flex items-center gap-3">
+                        <button
+                          onClick={() => togglePopular(cat.id, cat.popular)}
+                          disabled={isLoading}
+                          title={
+                            cat.popular
+                              ? "Quitar de Inicio"
+                              : "Destacar en Inicio"
+                          }
+                          className={`p-2 rounded-full transition-all ${
+                            isLoading
+                              ? "opacity-50 cursor-not-allowed"
+                              : "hover:bg-slate-100"
+                          }`}
+                        >
+                          {cat.popular ? (
+                            <Star
+                              size={22}
+                              className="text-yellow-500 fill-yellow-500 drop-shadow-sm"
+                            />
+                          ) : (
+                            <StarOff
+                              size={22}
+                              className="text-slate-300 hover:text-yellow-400"
+                            />
+                          )}
+                        </button>
+
+                        <div>
+                          <span className="font-bold text-[#131b2e] text-sm uppercase tracking-wider block">
+                            {cat.nombre}
+                          </span>
+                          <span className="text-[10px] text-[#3f4944]">
+                            {cat.popular
+                              ? "Visible en Inicio"
+                              : "Oculta en Inicio"}
+                          </span>
+                        </div>
+                      </div>
+
+                      <button
+                        onClick={() => handleEliminarCategoria(cat.id)}
+                        className="text-red-400 hover:text-red-600 bg-red-50 hover:bg-red-100 p-2 rounded-lg transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
+                        title="Eliminar Categoría"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    </li>
+                  );
+                })}
+                {categorias.length === 0 && (
+                  <div className="text-center py-10">
+                    <LayoutGrid
+                      size={48}
+                      className="text-slate-200 mx-auto mb-3"
+                    />
+                    <p className="text-slate-500 font-bold">
+                      No hay categorías registradas.
+                    </p>
+                    <p className="text-xs text-slate-400 mt-1">
+                      Crea tu primera categoría a la izquierda.
+                    </p>
+                  </div>
+                )}
+              </ul>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* ── 🟢 SECCIÓN DE RESPALDOS (NUEVA) ── */}
+      {/* ── 🟢 SECCIÓN DE CAMBIO DE NOMBRE (NUEVA) ── */}
+      <div className="bg-white p-6 rounded-2xl shadow-sm border border-[#bec9c2]/30">
+        <h2 className="text-xl font-black mb-5 text-[#131b2e] border-b border-[#bec9c2]/20 pb-3 flex items-center gap-2">
+          <User size={24} className="text-[#004532]" />
+          Actualizar Mi Perfil
+        </h2>
+
+        <form
+          onSubmit={handleChangeName}
+          className="flex flex-col md:flex-row gap-4 items-end"
+        >
+          <div className="w-full">
+            <label className="block text-[10px] font-bold text-[#3f4944] uppercase tracking-widest mb-1">
+              Nombre de Usuario
+            </label>
+            <input
+              type="text"
+              placeholder="Ej. Juan Pérez"
+              required
+              value={currentName}
+              onChange={(e) => setCurrentName(e.target.value)}
+              className="w-full bg-[#f2f3ff] border border-[#bec9c2]/30 p-3 rounded-lg focus:ring-2 focus:ring-[#004532] focus:outline-none transition-all text-sm"
+            />
+          </div>
+          <button
+            type="submit"
+            disabled={isNameLoading || !currentName.trim()}
+            className="w-full md:w-auto bg-[#131b2e] text-white font-bold py-3 px-8 rounded-lg hover:bg-[#1e293b] transition-colors shadow-md flex items-center justify-center gap-2 uppercase tracking-widest text-xs disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+          >
+            {isNameLoading ? "Guardando..." : "Guardar Nombre"}
+          </button>
+        </form>
+      </div>
+
+      {/* ── SECCIÓN DE CAMBIO DE CONTRASEÑA ── */}
+      <div className="bg-white p-6 rounded-2xl shadow-sm border border-[#bec9c2]/30">
+        <h2 className="text-xl font-black mb-5 text-[#131b2e] border-b border-[#bec9c2]/20 pb-3 flex items-center gap-2">
+          <KeyRound size={24} className="text-[#004532]" />
+          Cambiar Mi Contraseña
+        </h2>
+
+        <form
+          onSubmit={handleChangePassword}
+          className="flex flex-col md:flex-row gap-4 items-end"
+        >
+          <div className="w-full">
+            <label className="block text-[10px] font-bold text-[#3f4944] uppercase tracking-widest mb-1">
+              Nueva Contraseña
+            </label>
+            <input
+              type="password"
+              placeholder="Mínimo 6 caracteres"
+              required
+              minLength={6}
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              className="w-full bg-[#f2f3ff] border border-[#bec9c2]/30 p-3 rounded-lg focus:ring-2 focus:ring-[#004532] focus:outline-none transition-all text-sm"
+            />
+          </div>
+          <div className="w-full">
+            <label className="block text-[10px] font-bold text-[#3f4944] uppercase tracking-widest mb-1">
+              Confirmar Contraseña
+            </label>
+            <input
+              type="password"
+              placeholder="Repite la contraseña"
+              required
+              minLength={6}
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              className="w-full bg-[#f2f3ff] border border-[#bec9c2]/30 p-3 rounded-lg focus:ring-2 focus:ring-[#004532] focus:outline-none transition-all text-sm"
+            />
+          </div>
+          <button
+            type="submit"
+            disabled={isPasswordLoading || !newPassword || !confirmPassword}
+            className="w-full md:w-auto bg-[#004532] text-white font-bold py-3 px-8 rounded-lg hover:bg-[#065f46] transition-colors shadow-md flex items-center justify-center gap-2 uppercase tracking-widest text-xs disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+          >
+            {isPasswordLoading ? "Actualizando..." : "Actualizar"}
+          </button>
+        </form>
+      </div>
+
+      {/* ── SECCIÓN DE RESPALDOS ── */}
       <div className="bg-white p-6 rounded-2xl shadow-sm border border-[#bec9c2]/30 flex flex-col md:flex-row items-center justify-between gap-6">
         <div className="flex items-start gap-4">
           <div className="bg-[#e6f4ed] p-3 rounded-full shrink-0">

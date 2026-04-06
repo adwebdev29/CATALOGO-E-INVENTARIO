@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/app/_lib/supabase/supabase";
 import { useRouter } from "next/navigation";
-
+import Swal from "sweetalert2";
 export default function AdminLogin() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -31,7 +31,13 @@ export default function AdminLogin() {
     });
 
     if (error) {
-      alert("Error al iniciar sesión: " + error.message);
+      Swal.fire({
+        title: "Error al iniciar sesión: ",
+        text: error.message,
+        icon: "error",
+        confirmButtonColor: "#d33",
+      });
+
       setCargando(false);
     } else {
       router.push("/dashboard");
