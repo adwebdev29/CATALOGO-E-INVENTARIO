@@ -109,7 +109,7 @@ export default function ProductCard({ producto, main = true }) {
           </div>
 
           <h3
-            className="text-xs sm:text-lg font-bold tracking-tight text-[#131b2e] mb-3 uppercase line-clamp-2 cursor-pointer hover:text-[#004532] transition-colorsm max-w-md  w-[90%] mx-auto block"
+            className="text-sm sm:text-lg font-bold tracking-tight text-[#131b2e] mb-3 uppercase line-clamp-2 cursor-pointer hover:text-[#004532] transition-colors max-w-md  w-[97%] mx-auto block"
             onClick={() => setIsModalOpen(true)}
           >
             {producto.nombre}
