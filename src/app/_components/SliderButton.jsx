@@ -4,7 +4,7 @@ export default function SliderButton({ direction = "left", setSlide }) {
   }
   return (
     <button
-      className={`absolute ${direction === "right" ? "right-2" : "left-2"} top-1/2 -translate-y-1/2 z-10
+      className={`absolute ${direction === "right" ? "right-2" : "left-2"} top-1/2 -translate-y-1/2 z-50
        bg-slate-200/80 p-2 rounded-full shadow-md hover:bg-slate-300 transition-all cursor-pointer`}
       onClick={setSlide}
     >

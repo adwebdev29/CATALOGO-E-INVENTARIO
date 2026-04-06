@@ -115,7 +115,6 @@ export default async function Home() {
     .limit(6);
 
   const displayCategorias = categoriasPopulares || [];
-
   return (
     <main className="pt-16">
       {/* ── HERO (CON TUS IMÁGENES Y TEXTOS ORIGINALES) ── */}
@@ -238,8 +237,8 @@ export default async function Home() {
       </section>
 
       {/* ── FEATURED PRODUCTS SLIDER ── */}
-      <MainProducts productosDestacados={displayProducts} />
 
+      <MainProducts productosDestacados={displayProducts} />
       <section className="px-8 py-32 bg-[#131b2e] text-white overflow-hidden relative border-t border-white/5">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center gap-20 relative z-10">
           <div className="flex-1 architectural-border pl-10 border-[#004532]">
