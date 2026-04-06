@@ -64,7 +64,7 @@ export default function ProductCard({ producto, main = true }) {
       <article
         className={
           main
-            ? "w-[280px] md:w-[320px] shrink-0 snap-center group flex flex-col bg-white overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 border border-[#bec9c2]/20 rounded-xl max-w-md "
+            ? "w-[280px] md:w-[320px] shrink-0 p-3 snap-center group flex flex-col bg-white overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 border border-[#bec9c2]/20 rounded-xl max-w-md "
             : "h-full group flex flex-col bg-white overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 border border-[#bec9c2]/20 rounded-xl"
         }
       >
@@ -109,7 +109,7 @@ export default function ProductCard({ producto, main = true }) {
           </div>
 
           <h3
-            className="text-xs sm:text-lg font-bold tracking-tight text-[#131b2e] mb-3 uppercase line-clamp-2 cursor-pointer hover:text-[#004532] transition-colorsm max-w-md  w-md"
+            className="text-xs sm:text-lg font-bold tracking-tight text-[#131b2e] mb-3 uppercase line-clamp-2 cursor-pointer hover:text-[#004532] transition-colorsm max-w-md  w-md "
             onClick={() => setIsModalOpen(true)}
           >
             {producto.nombre}
