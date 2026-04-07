@@ -114,9 +114,7 @@ export default function ProductCard({ producto, main = true }) {
                 ${(Number(varianteActual.precio) || 0).toLocaleString()}
               </span>
             ) : (
-              <span className="text-[9px] sm:text-[10px] font-bold text-[#004532] uppercase tracking-widest shrink-0">
-                A Cotizar
-              </span>
+              <span className="text-[9px] sm:text-[10px] font-bold text-[#004532] uppercase tracking-widest shrink-0"></span>
             )}
           </div>
 

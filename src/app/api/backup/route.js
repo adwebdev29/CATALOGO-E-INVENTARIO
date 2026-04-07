@@ -7,6 +7,19 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url);
     const isDownload = searchParams.get("download") === "true";
 
+    // 🟢 BLOQUEO DE SEGURIDAD:
+    // Solo permitimos pasar si es una descarga manual desde el Dashboard
+    // O si trae el token secreto del Cron Job de Vercel.
+    if (!isDownload) {
+      const authHeader = request.headers.get("authorization");
+      if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+        return NextResponse.json(
+          { error: "No autorizado por Vercel Cron" },
+          { status: 401 },
+        );
+      }
+    }
+
     // 1. Extraemos toda la información de la base de datos
     const [resProd, resCat, resMar] = await Promise.all([
       supabase.from("productos").select("*"),
@@ -45,7 +58,7 @@ export async function GET(request) {
     }
 
     // 4. Lógica para el CRON JOB: Envío de correo
-    // Solo entramos aquí si NO se pidió descarga directa
+    // Solo entramos aquí si NO se pidió descarga directa (ya validamos que es el Cron)
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
