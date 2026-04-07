@@ -4,9 +4,9 @@ import { X, ShoppingCart, MessageCircle, Package } from "lucide-react";
 import { useCart } from "@/app/_context/CartContext";
 
 export default function ProductDetailModal({ producto, isOpen, onClose }) {
-  const { addToCart } = useCart();
+  // 🟢 1. EXTRAEMOS mostrarPrecios DEL CONTEXTO
+  const { addToCart, mostrarPrecios } = useCart();
   const [opcionSeleccionada, setOpcionSeleccionada] = useState(1);
-  // 🟢 ESTADO PARA CONTROLAR EL "VER MÁS" DE LA DESCRIPCIÓN
   const [isExpanded, setIsExpanded] = useState(false);
 
   useEffect(() => {
@@ -31,7 +31,7 @@ export default function ProductDetailModal({ producto, isOpen, onClose }) {
   const imageUrl =
     producto.imagen_url || producto.imagen || "https://via.placeholder.com/400";
 
-  // 🟢 ARREGLO DE VARIANTES DINÁMICO
+  // ARREGLO DE VARIANTES DINÁMICO
   const variantes = [
     {
       id: 1,
@@ -67,12 +67,13 @@ export default function ProductDetailModal({ producto, isOpen, onClose }) {
     cerrarModal();
   };
 
+  // 🟢 2. CONDICIONAMOS EL PRECIO EN EL MENSAJE DE WHATSAPP
   const waMessage = encodeURIComponent(
-    `¡Hola WOOX! Me interesa adquirir: ${producto.nombre} en presentación de ${varianteActual.etiqueta} por $${Number(varianteActual.precio).toLocaleString()}`,
+    `¡Hola WOOX! Me interesa adquirir: ${producto.nombre} en presentación de ${varianteActual.etiqueta}${mostrarPrecios ? ` por $${Number(varianteActual.precio).toLocaleString()}` : ""}`,
   );
 
-  // 🟢 LÓGICA PARA TRUNCAR LA DESCRIPCIÓN
-  const MAX_DESC_LENGTH = 120; // Ajusta este número si la quieres más larga o corta
+  // LÓGICA PARA TRUNCAR LA DESCRIPCIÓN
+  const MAX_DESC_LENGTH = 120;
   const descripcionCompleta =
     producto.descripcion ||
     "Equipo industrial de alta precisión y rendimiento garantizado.";
@@ -119,11 +120,18 @@ export default function ProductDetailModal({ producto, isOpen, onClose }) {
             {producto.nombre}
           </h2>
 
-          <p className="text-3xl font-black text-[#004532] mb-4">
-            ${(Number(varianteActual.precio) || 0).toLocaleString()}
-          </p>
+          {/* 🟢 3. CONDICIONAMOS EL PRECIO PRINCIPAL */}
+          {mostrarPrecios ? (
+            <p className="text-3xl font-black text-[#004532] mb-4">
+              ${(Number(varianteActual.precio) || 0).toLocaleString()}
+            </p>
+          ) : (
+            <p className="text-lg font-black text-[#004532] mb-4 uppercase tracking-widest">
+              A Cotizar
+            </p>
+          )}
 
-          {/* 🟢 DESCRIPCIÓN CON BOTÓN DE VER MÁS/MENOS */}
+          {/* DESCRIPCIÓN CON BOTÓN DE VER MÁS/MENOS */}
           <div className="mb-8">
             <p className="text-sm text-[#3f4944] leading-relaxed inline">
               {descripcionMostrar}
@@ -141,7 +149,7 @@ export default function ProductDetailModal({ producto, isOpen, onClose }) {
             )}
           </div>
 
-          {/* 🟢 SIEMPRE SE RENDERIZA EL SELECT */}
+          {/* SIEMPRE SE RENDERIZA EL SELECT */}
           <div className="mb-8">
             <h4 className="text-[10px] font-black uppercase tracking-widest text-[#3f4944] mb-3 flex items-center gap-2">
               <Package size={14} className="text-[#004532]" /> Selecciona la
@@ -158,7 +166,11 @@ export default function ProductDetailModal({ producto, isOpen, onClose }) {
             >
               {variantes.map((v) => (
                 <option key={v.id} value={v.id}>
-                  {v.etiqueta} - ${(Number(v.precio) || 0).toLocaleString()}
+                  {/* 🟢 4. CONDICIONAMOS EL PRECIO EN LAS OPCIONES */}
+                  {v.etiqueta}{" "}
+                  {mostrarPrecios
+                    ? `- $${(Number(v.precio) || 0).toLocaleString()}`
+                    : ""}
                 </option>
               ))}
             </select>
@@ -177,7 +189,9 @@ export default function ProductDetailModal({ producto, isOpen, onClose }) {
               rel="noopener noreferrer"
               className="flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#1ebd5a] text-white py-4 px-6 rounded-xl font-bold text-xs uppercase tracking-widest transition-all shadow-md"
             >
-              <MessageCircle size={18} /> Comprar Ya
+              {/* 🟢 5. CAMBIAMOS EL TEXTO DEL BOTÓN SEGÚN LA VISIBILIDAD */}
+              <MessageCircle size={18} />{" "}
+              {mostrarPrecios ? "Comprar Ya" : "Cotizar Ya"}
             </a>
           </div>
         </div>

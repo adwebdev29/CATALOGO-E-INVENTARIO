@@ -14,7 +14,9 @@ import {
   KeyRound,
   ChevronDown,
   ChevronUp,
-  User, // 🟢 Importamos ícono para el nombre de usuario
+  User,
+  Eye, // 🟢 Importamos ícono de ojo abierto
+  EyeOff, // 🟢 Importamos ícono de ojo cerrado
 } from "lucide-react";
 
 export default function ConfiguracionPage() {
@@ -26,7 +28,11 @@ export default function ConfiguracionPage() {
 
   const [showCategorias, setShowCategorias] = useState(false);
 
-  // 🟢 ESTADOS PARA EL PERFIL (NOMBRE)
+  // 🟢 ESTADO PARA VISIBILIDAD DE PRECIOS
+  const [mostrarPrecios, setMostrarPrecios] = useState(true);
+  const [isToggleLoading, setIsToggleLoading] = useState(false);
+
+  // ESTADOS PARA EL PERFIL (NOMBRE)
   const [currentUserId, setCurrentUserId] = useState(null);
   const [currentName, setCurrentName] = useState("");
   const [isNameLoading, setIsNameLoading] = useState(false);
@@ -35,7 +41,20 @@ export default function ConfiguracionPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isPasswordLoading, setIsPasswordLoading] = useState(false);
 
-  // 🟢 TRAER DATOS DEL USUARIO ACTUAL
+  // 🟢 TRAER CONFIGURACIÓN DE PRECIOS
+  const fetchConfiguracion = useCallback(async () => {
+    const { data, error } = await supabase
+      .from("configuracion_app")
+      .select("mostrar_precios")
+      .eq("id", 1)
+      .single();
+
+    if (data && !error) {
+      setMostrarPrecios(data.mostrar_precios);
+    }
+  }, []);
+
+  // TRAER DATOS DEL USUARIO ACTUAL
   const fetchMiPerfil = useCallback(async () => {
     const {
       data: { user },
@@ -43,7 +62,6 @@ export default function ConfiguracionPage() {
 
     if (user) {
       setCurrentUserId(user.id);
-      // Buscamos su nombre en la tabla perfiles
       const { data, error } = await supabase
         .from("perfiles")
         .select("nombre")
@@ -66,8 +84,9 @@ export default function ConfiguracionPage() {
 
   useEffect(() => {
     fetchCategorias();
-    fetchMiPerfil(); // 🟢 Cargamos el perfil al iniciar
-  }, [fetchCategorias, fetchMiPerfil]);
+    fetchMiPerfil();
+    fetchConfiguracion(); // 🟢 Cargamos la configuración al iniciar
+  }, [fetchCategorias, fetchMiPerfil, fetchConfiguracion]);
 
   const handleAgregarCategoria = async (e) => {
     e.preventDefault();
@@ -177,7 +196,40 @@ export default function ConfiguracionPage() {
     }
   };
 
-  // 🟢 NUEVA FUNCIÓN: Actualizar Nombre
+  // 🟢 NUEVA FUNCIÓN: Cambiar Visibilidad de Precios
+  const handleTogglePrecios = async () => {
+    setIsToggleLoading(true);
+    try {
+      const { error } = await supabase
+        .from("configuracion_app")
+        .update({ mostrar_precios: !mostrarPrecios })
+        .eq("id", 1);
+
+      if (error) throw error;
+
+      setMostrarPrecios(!mostrarPrecios);
+      Swal.fire({
+        icon: "success",
+        title: !mostrarPrecios ? "Precios Activados" : "Precios Ocultos",
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+      });
+    } catch (error) {
+      Swal.fire({
+        title: "Error al actualizar",
+        text: error.message,
+        icon: "error",
+        confirmButtonColor: "#d33",
+      });
+    } finally {
+      setIsToggleLoading(false);
+    }
+  };
+
+  // NUEVA FUNCIÓN: Actualizar Nombre
   const handleChangeName = async (e) => {
     e.preventDefault();
     if (!currentName.trim() || !currentUserId) return;
@@ -220,7 +272,7 @@ export default function ConfiguracionPage() {
         title: "Validación de contraseña",
         text: "Las contraseñas no coinciden. Por favor, verifícalas e intenta de nuevo.",
         icon: "warning",
-        confirmButtonColor: "#131b2e", // Tu azul oscuro de WOOX
+        confirmButtonColor: "#131b2e",
       });
       return;
     }
@@ -246,7 +298,7 @@ export default function ConfiguracionPage() {
         title: "¡Seguridad Actualizada!",
         text: "Tu contraseña ha sido cambiada con éxito.",
         icon: "success",
-        confirmButtonColor: "#004532", // Tu verde WOOX
+        confirmButtonColor: "#004532",
       });
       setNewPassword("");
       setConfirmPassword("");
@@ -440,7 +492,48 @@ export default function ConfiguracionPage() {
         </div>
       </div>
 
-      {/* ── 🟢 SECCIÓN DE CAMBIO DE NOMBRE (NUEVA) ── */}
+      {/* ── 🟢 SECCIÓN DE VISIBILIDAD DE PRECIOS (NUEVA) ── */}
+      <div className="bg-white p-6 rounded-2xl shadow-sm border border-[#bec9c2]/30 flex flex-col md:flex-row items-center justify-between gap-6">
+        <div className="flex items-start gap-4">
+          <div
+            className={`p-3 rounded-full shrink-0 transition-colors ${
+              mostrarPrecios
+                ? "bg-emerald-100 text-[#004532]"
+                : "bg-slate-100 text-slate-400"
+            }`}
+          >
+            {mostrarPrecios ? <Eye size={28} /> : <EyeOff size={28} />}
+          </div>
+          <div>
+            <h3 className="text-lg font-black text-[#131b2e] flex items-center gap-2">
+              Visibilidad de Precios en Tienda
+            </h3>
+            <p className="text-sm text-[#3f4944] mt-1 max-w-xl">
+              Si ocultas los precios, los clientes podrán seguir agregando
+              variantes al carrito para armar una cotización, pero no verán
+              ningún costo hasta que los contactes.
+            </p>
+          </div>
+        </div>
+
+        <button
+          onClick={handleTogglePrecios}
+          disabled={isToggleLoading}
+          className={`w-full md:w-auto font-bold py-3 px-6 rounded-lg transition-colors shadow-md flex items-center justify-center gap-2 uppercase tracking-widest text-xs disabled:opacity-50 shrink-0 ${
+            mostrarPrecios
+              ? "bg-red-50 text-red-600 hover:bg-red-100 border border-red-200"
+              : "bg-[#004532] text-white hover:bg-[#065f46]"
+          }`}
+        >
+          {isToggleLoading
+            ? "Actualizando..."
+            : mostrarPrecios
+              ? "Ocultar Precios"
+              : "Mostrar Precios"}
+        </button>
+      </div>
+
+      {/* ── SECCIÓN DE CAMBIO DE NOMBRE ── */}
       <div className="bg-white p-6 rounded-2xl shadow-sm border border-[#bec9c2]/30">
         <h2 className="text-xl font-black mb-5 text-[#131b2e] border-b border-[#bec9c2]/20 pb-3 flex items-center gap-2">
           <User size={24} className="text-[#004532]" />

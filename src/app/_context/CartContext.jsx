@@ -1,5 +1,7 @@
 "use client";
 import { createContext, useContext, useState, useEffect } from "react";
+// 🟢 1. Importamos tu cliente de Supabase
+import { supabase } from "../_lib/supabase/supabase";
 
 const CartContext = createContext();
 
@@ -8,9 +10,35 @@ export function CartProvider({ children }) {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
 
+  // 🟢 2. NUEVO ESTADO: Control maestro de visibilidad de precios (por defecto true)
+  const [mostrarPrecios, setMostrarPrecios] = useState(true);
+
+  // 🟢 3. FETCH CONFIGURACIÓN: Leemos el interruptor desde la base de datos al cargar la app
+  useEffect(() => {
+    const fetchConfiguracion = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("configuracion_app")
+          .select("mostrar_precios")
+          .eq("id", 1)
+          .single();
+
+        if (error) throw error;
+
+        if (data !== null) {
+          setMostrarPrecios(data.mostrar_precios);
+        }
+      } catch (error) {
+        console.error("Error al cargar la configuración de precios:", error);
+      }
+    };
+
+    fetchConfiguracion();
+  }, []);
+
   // 1. Cargar el carrito desde localStorage al iniciar (Corregido para React 19)
   useEffect(() => {
-    // 🟢 Envolverlo en un setTimeout asíncrono elimina el error de "cascading renders"
+    // Envolverlo en un setTimeout asíncrono elimina el error de "cascading renders"
     const timer = setTimeout(() => {
       const savedCart = localStorage.getItem("woox_cart");
       if (savedCart) {
@@ -138,6 +166,7 @@ export function CartProvider({ children }) {
         changeItemVariant,
         totalItems,
         totalPrice,
+        mostrarPrecios, // 🟢 4. Exponemos la variable a toda la app
       }}
     >
       {children}

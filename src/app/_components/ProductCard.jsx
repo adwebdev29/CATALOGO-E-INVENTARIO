@@ -7,7 +7,8 @@ import { ZoomIn, ShoppingCart, Eye, MessageCircle } from "lucide-react";
 
 export default function ProductCard({ producto, main = true }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const { addToCart } = useCart();
+  // 🟢 1. EXTRAEMOS mostrarPrecios DEL CONTEXTO
+  const { addToCart, mostrarPrecios } = useCart();
   const [opcionSeleccionada, setOpcionSeleccionada] = useState(1);
 
   const imageUrl =
@@ -15,7 +16,7 @@ export default function ProductCard({ producto, main = true }) {
     producto.imagen ||
     "https://placehold.co/400x400/png";
 
-  // 🟢 CREAMOS EL ARREGLO DE VARIANTES DINÁMICAMENTE
+  // CREAMOS EL ARREGLO DE VARIANTES DINÁMICAMENTE
   const variantes = [
     {
       id: 1,
@@ -36,7 +37,7 @@ export default function ProductCard({ producto, main = true }) {
       precio: producto.precio_3,
     });
 
-  // 🟢 OBTENEMOS LA VARIANTE ACTUAL SEGÚN LA SELECCIÓN
+  // OBTENEMOS LA VARIANTE ACTUAL SEGÚN LA SELECCIÓN
   const varianteActual =
     variantes.find((v) => v.id === opcionSeleccionada) || variantes[0];
 
@@ -52,8 +53,8 @@ export default function ProductCard({ producto, main = true }) {
     addToCart(productoParaCarrito);
   };
 
-  // 🟢 TRUNCAR DESCRIPCIÓN (Ajusta el número 65 si quieres más o menos letras)
-  const MAX_LENGTH = 65;
+  // TRUNCAR DESCRIPCIÓN (Ajusta el número 65 si quieres más o menos letras)
+  const MAX_LENGTH = 60; // 🟢 Reducido ligeramente para ajustar al nuevo tamaño
   const descripcionTruncada =
     producto?.descripcion && producto.descripcion.length > MAX_LENGTH
       ? producto.descripcion.substring(0, MAX_LENGTH).trim() + "..."
@@ -64,12 +65,14 @@ export default function ProductCard({ producto, main = true }) {
       <article
         className={
           main
-            ? "w-[280px] md:w-[320px] shrink-0 p-3 snap-center group flex flex-col bg-white overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 border border-[#bec9c2]/20 rounded-xl max-w-md "
-            : "h-full group flex flex-col bg-white overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 border border-[#bec9c2]/20 rounded-xl"
+            ? // 🟢 REDUJIMOS EL ANCHO: De w-[280/320] a w-[240px] md:w-[280px]
+              "w-[240px] md:w-[280px] shrink-0 p-2 sm:p-3 snap-center group flex flex-col bg-white overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-[#bec9c2]/20 rounded-xl max-w-sm"
+            : "h-full group flex flex-col bg-white overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-[#bec9c2]/20 rounded-xl min-w-0"
         }
       >
         <div
-          className="relative w-full h-36 sm:h-56 overflow-hidden bg-white flex items-center justify-center cursor-pointer border-b border-[#bec9c2]/10"
+          // 🟢 REDUJIMOS LA ALTURA DE LA IMAGEN: De h-56 a h-48 para que no se vea tan gigante
+          className="relative w-full h-36 sm:h-48 overflow-hidden bg-white flex items-center justify-center cursor-pointer border-b border-[#bec9c2]/10"
           onClick={() => setIsModalOpen(true)}
         >
           <Image
@@ -77,21 +80,22 @@ export default function ProductCard({ producto, main = true }) {
             alt={producto.nombre || "Producto WOOX"}
             fill
             sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
-            className="object-contain p-2 sm:p-4 group-hover:scale-105 transition-transform duration-500"
+            className="object-contain p-3 sm:p-4 group-hover:scale-105 transition-transform duration-500"
           />
           <div className="absolute inset-0 bg-[#131b2e]/0 group-hover:bg-[#131b2e]/5 transition-colors duration-300 flex items-center justify-center">
             <div className="text-[#131b2e] opacity-0 group-hover:opacity-100 transition-opacity duration-300 drop-shadow-md bg-white/80 rounded-full p-2 flex items-center justify-center">
-              <ZoomIn size={24} strokeWidth={1.5} />
+              <ZoomIn size={20} strokeWidth={1.5} />
             </div>
           </div>
           {producto.stock <= 5 && producto.stock > 0 && (
-            <div className="absolute top-2 right-2 sm:top-4 sm:right-4 bg-red-600 text-white text-[8px] sm:text-[10px] font-bold px-2 py-1 uppercase tracking-widest shadow-md rounded-sm">
+            <div className="absolute top-2 right-2 sm:top-3 sm:right-3 bg-red-600 text-white text-[8px] sm:text-[9px] font-bold px-2 py-1 uppercase tracking-widest shadow-md rounded-sm">
               ¡Últimas!
             </div>
           )}
         </div>
 
-        <div className="p-3 sm:p-5 flex flex-col flex-1">
+        {/* 🟢 REDUJIMOS LOS PADDINGS INTERNOS (De p-5 a p-4) */}
+        <div className="p-3 sm:p-4 flex flex-col flex-1 min-w-0">
           <div className="flex justify-between items-start mb-2 gap-2">
             <div className="flex items-center gap-1.5 overflow-hidden">
               {producto.marca && (
@@ -99,24 +103,33 @@ export default function ProductCard({ producto, main = true }) {
                   {producto.marca}
                 </span>
               )}
-              <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-[#004532] truncate">
+              <span className="text-[9px] font-bold uppercase tracking-widest text-[#004532] truncate">
                 {producto.categoria}
               </span>
             </div>
-            <span className="text-sm sm:text-lg font-black text-[#131b2e] shrink-0">
-              ${(Number(varianteActual.precio) || 0).toLocaleString()}
-            </span>
+
+            {/* 🟢 CONDICIONAMOS EL PRECIO PRINCIPAL (Texto un poco más pequeño: text-base en vez de text-lg) */}
+            {mostrarPrecios ? (
+              <span className="text-sm sm:text-base font-black text-[#131b2e] shrink-0">
+                ${(Number(varianteActual.precio) || 0).toLocaleString()}
+              </span>
+            ) : (
+              <span className="text-[9px] sm:text-[10px] font-bold text-[#004532] uppercase tracking-widest shrink-0">
+                A Cotizar
+              </span>
+            )}
           </div>
 
           <h3
-            className="text-sm sm:text-lg font-bold tracking-tight text-[#131b2e] mb-3 uppercase line-clamp-2 cursor-pointer hover:text-[#004532] transition-colors max-w-md  w-[97%] mx-auto block"
+            // 🟢 TEXTO DEL TÍTULO UN POCO MÁS COMPACTO Y MARGEN INFERIOR REDUCIDO
+            className="text-sm sm:text-base font-bold tracking-tight text-[#131b2e] mb-2 uppercase line-clamp-2 cursor-pointer hover:text-[#004532] transition-colors break-words max-w-md"
             onClick={() => setIsModalOpen(true)}
           >
             {producto.nombre}
           </h3>
 
-          {/* 🟢 AQUI SE IMPRIME LA DESCRIPCION RECORTADA */}
-          <p className="hidden sm:block text-[#3f4944] text-xs mb-4 leading-relaxed flex-1">
+          {/* AQUI SE IMPRIME LA DESCRIPCION RECORTADA */}
+          <p className="hidden sm:block text-[#3f4944] text-[11px] sm:text-xs mb-3 leading-relaxed flex-1 line-clamp-2">
             {descripcionTruncada}
           </p>
 
@@ -125,39 +138,46 @@ export default function ProductCard({ producto, main = true }) {
               value={opcionSeleccionada}
               onChange={(e) => setOpcionSeleccionada(Number(e.target.value))}
               onClick={(e) => e.stopPropagation()}
-              className="w-full bg-[#f2f3ff] text-[#131b2e] border border-[#bec9c2]/40 text-[10px] sm:text-xs font-bold rounded-lg p-2 focus:outline-none focus:ring-1 focus:ring-[#004532] cursor-pointer"
+              className="w-full bg-[#f2f3ff] text-[#131b2e] border border-[#bec9c2]/40 text-[10px] font-bold rounded-lg p-2 focus:outline-none focus:ring-1 focus:ring-[#004532] cursor-pointer"
             >
               {variantes.map((v) => (
                 <option key={v.id} value={v.id}>
-                  {v.etiqueta} - ${(Number(v.precio) || 0).toLocaleString()}
+                  {/* 🟢 CONDICIONAMOS EL PRECIO EN EL SELECT */}
+                  {v.etiqueta}{" "}
+                  {mostrarPrecios
+                    ? `- $${(Number(v.precio) || 0).toLocaleString()}`
+                    : ""}
                 </option>
               ))}
             </select>
 
             <button
               onClick={handleAgregarCarrito}
-              className="w-full py-2 sm:py-2.5 bg-[#004532] text-white font-bold rounded-lg flex items-center justify-center gap-1.5 hover:bg-[#065f46] transition-colors text-[10px] sm:text-xs tracking-widest uppercase shadow-sm"
+              // 🟢 PADDINGS DE BOTONES MÁS ESTILIZADOS
+              className="w-full py-2 bg-[#004532] text-white font-bold rounded-lg flex items-center justify-center gap-1.5 hover:bg-[#065f46] transition-colors text-[10px] sm:text-[11px] tracking-widest uppercase shadow-sm"
             >
-              <ShoppingCart size={16} strokeWidth={2} />
+              <ShoppingCart size={14} strokeWidth={2} />
               Al Carrito
             </button>
 
             <div className="grid grid-cols-2 gap-2">
               <button
                 onClick={() => setIsModalOpen(true)}
-                className="w-full py-2 bg-white text-[#131b2e] border border-[#bec9c2]/50 font-bold rounded-lg flex items-center justify-center gap-1 hover:bg-[#f2f3ff] transition-colors text-[9px] sm:text-[10px] tracking-widest uppercase shadow-sm"
+                className="w-full py-2 bg-white text-[#131b2e] border border-[#bec9c2]/50 font-bold rounded-lg flex items-center justify-center gap-1 hover:bg-[#f2f3ff] transition-colors text-[9px] tracking-widest uppercase shadow-sm"
               >
-                <Eye size={14} strokeWidth={2} /> Detalles
+                <Eye size={12} strokeWidth={2} /> Detalles
               </button>
+
+              {/* 🟢 CONDICIONAMOS EL MENSAJE DE WHATSAPP */}
               <a
                 href={`https://wa.me/525554946246?text=Hola, me interesa: ${encodeURIComponent(
                   producto.nombre,
-                )} (${varianteActual.etiqueta}) por $${varianteActual.precio}`}
+                )} (${varianteActual.etiqueta})${mostrarPrecios ? ` por $${varianteActual.precio}` : ""}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-full py-2 bg-[#131b2e] text-white font-bold rounded-lg flex items-center justify-center gap-1 hover:bg-[#1e293b] transition-colors text-[9px] sm:text-[10px] tracking-widest uppercase shadow-sm"
+                className="w-full py-2 bg-[#131b2e] text-white font-bold rounded-lg flex items-center justify-center gap-1 hover:bg-[#1e293b] transition-colors text-[9px] tracking-widest uppercase shadow-sm"
               >
-                <MessageCircle size={14} strokeWidth={2} /> WhatsApp
+                <MessageCircle size={12} strokeWidth={2} /> WhatsApp
               </a>
             </div>
           </div>

@@ -20,17 +20,28 @@ export default function CartDrawer() {
     updateQuantity,
     changeItemVariant,
     totalPrice,
+    mostrarPrecios, // 🟢 1. EXTRAEMOS LA VARIABLE DEL CONTEXTO
   } = useCart();
 
   if (!isCartOpen) return null;
 
+  // 🟢 2. CONDICIONAMOS EL MENSAJE DE WHATSAPP
   const getWhatsAppMessage = () => {
     let message =
       "¡Hola, equipo de WOOX! Me gustaría cotizar los siguientes productos:\n\n";
     cart.forEach((item) => {
-      message += `• ${item.nombre}\n  Cant: ${item.quantity} x $${Number(item.precio).toLocaleString()} = $${(item.precio * item.quantity).toLocaleString()}\n`;
+      if (mostrarPrecios) {
+        message += `• ${item.nombre}\n  Cant: ${item.quantity} x $${Number(item.precio).toLocaleString()} = $${(item.precio * item.quantity).toLocaleString()}\n`;
+      } else {
+        message += `• ${item.nombre}\n  Cant: ${item.quantity}\n`;
+      }
     });
-    message += `\n*TOTAL ESTIMADO: $${totalPrice.toLocaleString()}*`;
+
+    if (mostrarPrecios) {
+      message += `\n*TOTAL ESTIMADO: $${totalPrice.toLocaleString()}*`;
+    } else {
+      message += `\n*(Solicitud de cotización)*`;
+    }
     return encodeURIComponent(message);
   };
 
@@ -73,24 +84,6 @@ export default function CartDrawer() {
           ) : (
             <ul className="space-y-4">
               {cart.map((item) => {
-                // 🟢 CREAMOS EL ARREGLO DE VARIANTES DEL ITEM
-                const variantes = [
-                  {
-                    id: 1,
-                    etiqueta: item.etiqueta_1 || "1 Pieza",
-                    precio: item.precio_base || item.precio,
-                  }, // OJO: Usamos precio si es la opcion 1, pero si en el context cambiamos de precio, el original siempre debe vivir, aunque para este dropdown visual, lo armamos asi:
-                ];
-                // Parche rápido: para leer siempre el precio base correcto en caso de que item.precio ya haya cambiado:
-                const precio_1 =
-                  item.precio_base ||
-                  (item.varianteSeleccionada === 1
-                    ? item.precio
-                    : item.id.endsWith("-1")
-                      ? item.precio
-                      : 0); // Si es mas complejo, pasamos fullProductData
-
-                // Una forma mas limpia de reconstruirlo:
                 const itemVariantes = [
                   { id: 1, etiqueta: item.etiqueta_1 || "1 Pieza" },
                 ];
@@ -127,13 +120,15 @@ export default function CartDrawer() {
                             <Trash2 size={16} />
                           </button>
                         </div>
-                        <p className="text-[#004532] font-black mt-1">
-                          ${Number(item.precio).toLocaleString()}
-                        </p>
+                        {/* 🟢 3. CONDICIONAMOS EL PRECIO INDIVIDUAL */}
+                        {mostrarPrecios && (
+                          <p className="text-[#004532] font-black mt-1">
+                            ${Number(item.precio).toLocaleString()}
+                          </p>
+                        )}
                       </div>
 
                       <div className="flex flex-col gap-2 mt-3">
-                        {/* 🟢 SIEMPRE RENDERIZAMOS EL SELECT */}
                         <select
                           value={item.varianteSeleccionada || 1}
                           onChange={(e) =>
@@ -184,14 +179,27 @@ export default function CartDrawer() {
 
         {cart.length > 0 && (
           <div className="p-6 bg-white border-t border-[#bec9c2]/30 shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
-            <div className="flex justify-between items-end mb-6">
-              <span className="text-xs font-bold text-[#3f4944] uppercase tracking-widest">
-                Total Estimado
-              </span>
-              <span className="text-3xl font-black text-[#131b2e] tracking-tight">
-                ${totalPrice.toLocaleString()}
-              </span>
-            </div>
+            {/* 🟢 4. CONDICIONAMOS EL TOTAL ESTIMADO */}
+            {mostrarPrecios ? (
+              <div className="flex justify-between items-end mb-6">
+                <span className="text-xs font-bold text-[#3f4944] uppercase tracking-widest">
+                  Total Estimado
+                </span>
+                <span className="text-3xl font-black text-[#131b2e] tracking-tight">
+                  ${totalPrice.toLocaleString()}
+                </span>
+              </div>
+            ) : (
+              <div className="mb-6 text-center border-b border-[#bec9c2]/20 pb-4">
+                <span className="text-[#004532] font-black uppercase tracking-widest text-sm block">
+                  Lista para cotizar
+                </span>
+                <span className="text-[10px] text-[#3f4944] mt-1 font-medium">
+                  Envía tu lista para que un asesor te dé los mejores precios.
+                </span>
+              </div>
+            )}
+
             <div className="flex flex-col gap-3">
               <Link
                 href="/contacto"

@@ -17,7 +17,8 @@ import { FaFacebookF, FaInstagram, FaTiktok } from "react-icons/fa";
 import ScrollReveal from "@/app/_components/ScrollReveal";
 
 export default function Contacto() {
-  const { cart, totalPrice } = useCart();
+  // 🟢 1. EXTRAEMOS mostrarPrecios DEL CONTEXTO
+  const { cart, totalPrice, mostrarPrecios } = useCart();
 
   const [form, setForm] = useState({
     nombre: "",
@@ -30,12 +31,19 @@ export default function Contacto() {
   const [enviando, setEnviando] = useState(false);
   const [enviado, setEnviado] = useState(false);
 
-  // Formateamos la lista de productos
+  // 🟢 2. CONDICIONAMOS EL TEXTO PARA CORREO Y WHATSAPP
   const productosTexto =
     cart.length > 0
       ? cart
-          .map((item) => `• ${item.nombre} (Cantidad: ${item.quantity})`)
-          .join("\n") + `\n\nTotal estimado: $${totalPrice.toLocaleString()}`
+          .map((item) =>
+            mostrarPrecios
+              ? `• ${item.nombre}\n  Cant: ${item.quantity} x $${Number(item.precio).toLocaleString()} = $${(item.precio * item.quantity).toLocaleString()}`
+              : `• ${item.nombre}\n  Cant: ${item.quantity}`,
+          )
+          .join("\n") +
+        (mostrarPrecios
+          ? `\n\nTotal estimado: $${totalPrice.toLocaleString()}`
+          : `\n\n(Solicitud de cotización de lista)`)
       : form.productosExtra || "(No se seleccionaron productos del catálogo)";
 
   const handleEmailSubmit = async (e) => {
@@ -250,19 +258,34 @@ export default function Contacto() {
                                 x{item.quantity}
                               </span>
                             </span>
-                            <span className="font-black text-[#131b2e]">
-                              ${(item.precio * item.quantity).toLocaleString()}
-                            </span>
+
+                            {/* 🟢 3. CONDICIONAMOS EL PRECIO EN LA UI */}
+                            {mostrarPrecios && (
+                              <span className="font-black text-[#131b2e]">
+                                $
+                                {(item.precio * item.quantity).toLocaleString()}
+                              </span>
+                            )}
                           </div>
                         ))}
-                        <div className="border-t border-[#004532]/20 pt-3 mt-2 flex justify-between items-center font-black">
-                          <span className="text-[10px] uppercase tracking-widest text-[#3f4944]">
-                            Total estimado
-                          </span>
-                          <span className="text-lg text-[#004532]">
-                            ${totalPrice.toLocaleString()}
-                          </span>
-                        </div>
+
+                        {/* 🟢 4. CONDICIONAMOS EL FOOTER DEL TOTAL EN LA UI */}
+                        {mostrarPrecios ? (
+                          <div className="border-t border-[#004532]/20 pt-3 mt-2 flex justify-between items-center font-black">
+                            <span className="text-[10px] uppercase tracking-widest text-[#3f4944]">
+                              Total estimado
+                            </span>
+                            <span className="text-lg text-[#004532]">
+                              ${totalPrice.toLocaleString()}
+                            </span>
+                          </div>
+                        ) : (
+                          <div className="border-t border-[#004532]/20 pt-3 mt-2 text-center">
+                            <span className="text-[10px] uppercase tracking-widest text-[#004532] font-bold">
+                              Lista preparada para cotizar
+                            </span>
+                          </div>
+                        )}
                       </div>
                     ) : (
                       <textarea
