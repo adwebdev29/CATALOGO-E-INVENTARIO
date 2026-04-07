@@ -4,6 +4,8 @@ import Footer from "../_components/Footer";
 import CartDrawer from "../_components/CartDrawer";
 import WhatsAppFloat from "../_components/WhatsAppFloat";
 import { CartProvider } from "../_context/CartContext";
+// 🟢 Importamos el componente de animaciones
+import ScrollReveal from "../_components/ScrollReveal";
 
 export const metadata = {
   title: "Woox México",
@@ -24,8 +26,13 @@ export default function RootLayout({ children }) {
           <Header />
           <CartDrawer />
           <WhatsAppFloat />
+
           <div className="min-h-screen flex flex-col">{children}</div>
-          <Footer />
+
+          {/* 🟢 Animamos el Footer para que aparezca desde abajo en TODAS las páginas */}
+          <ScrollReveal direction="up" delay={0.1}>
+            <Footer />
+          </ScrollReveal>
         </CartProvider>
       </body>
     </html>

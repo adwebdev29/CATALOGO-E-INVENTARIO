@@ -1,8 +1,10 @@
 import { supabase } from "@/app/_lib/supabase/supabase";
 import ProductCard from "@/app/_components/ProductCard";
-import CatalogoLayout from "@/app/_components/CatalogoLayout"; // 🟢 Importamos el Layout
+import CatalogoLayout from "@/app/_components/CatalogoLayout";
 import Link from "next/link";
 import { ArrowLeft, ArrowRight, PackageX } from "lucide-react";
+// 🟢 Importamos ScrollReveal
+import ScrollReveal from "@/app/_components/ScrollReveal";
 
 export const revalidate = 0;
 const ITEMS_PER_PAGE = 12;
@@ -81,51 +83,62 @@ export default async function Catalogo(props) {
         </div>
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-8">
-          {productos.map((producto) => (
-            <ProductCard key={producto.id} producto={producto} main={false} />
+          {productos.map((producto, index) => (
+            // 🟢 AQUÍ ENVOLVEMOS CADA TARJETA.
+            // Usamos un delay muy pequeñito basado en el índice (solo en los primeros 6 para que carguen rápido)
+            // Después del índice 5, todos cargan al instante al hacer scroll.
+            <ScrollReveal
+              key={producto.id}
+              direction="up"
+              delay={index < 6 ? index * 0.05 : 0}
+            >
+              <ProductCard producto={producto} main={false} />
+            </ScrollReveal>
           ))}
         </div>
       )}
 
       {/* ── PAGINACIÓN ── */}
       {totalPages > 1 && (
-        <div className="mt-12 flex gap-4 justify-center items-center font-bold">
-          {currentPage > 1 ? (
-            <Link
-              href={createPageUrl(currentPage - 1)}
-              className="p-2 border-2 border-[#131b2e] rounded-full text-[#131b2e] hover:bg-[#131b2e] hover:text-white transition-colors"
-            >
-              <ArrowLeft size={20} />
-            </Link>
-          ) : (
-            <button
-              disabled
-              className="p-2 border-2 border-[#131b2e] rounded-full opacity-20 cursor-not-allowed"
-            >
-              <ArrowLeft size={20} />
-            </button>
-          )}
+        <ScrollReveal direction="up" delay={0.2}>
+          <div className="mt-12 flex gap-4 justify-center items-center font-bold">
+            {currentPage > 1 ? (
+              <Link
+                href={createPageUrl(currentPage - 1)}
+                className="p-2 border-2 border-[#131b2e] rounded-full text-[#131b2e] hover:bg-[#131b2e] hover:text-white transition-colors"
+              >
+                <ArrowLeft size={20} />
+              </Link>
+            ) : (
+              <button
+                disabled
+                className="p-2 border-2 border-[#131b2e] rounded-full opacity-20 cursor-not-allowed"
+              >
+                <ArrowLeft size={20} />
+              </button>
+            )}
 
-          <span>
-            {currentPage} / {totalPages}
-          </span>
+            <span>
+              {currentPage} / {totalPages}
+            </span>
 
-          {currentPage < totalPages ? (
-            <Link
-              href={createPageUrl(currentPage + 1)}
-              className="p-2 border-2 border-[#131b2e] rounded-full text-[#131b2e] hover:bg-[#131b2e] hover:text-white transition-colors"
-            >
-              <ArrowRight size={20} />
-            </Link>
-          ) : (
-            <button
-              disabled
-              className="p-2 border-2 border-[#131b2e] rounded-full opacity-20 cursor-not-allowed"
-            >
-              <ArrowRight size={20} />
-            </button>
-          )}
-        </div>
+            {currentPage < totalPages ? (
+              <Link
+                href={createPageUrl(currentPage + 1)}
+                className="p-2 border-2 border-[#131b2e] rounded-full text-[#131b2e] hover:bg-[#131b2e] hover:text-white transition-colors"
+              >
+                <ArrowRight size={20} />
+              </Link>
+            ) : (
+              <button
+                disabled
+                className="p-2 border-2 border-[#131b2e] rounded-full opacity-20 cursor-not-allowed"
+              >
+                <ArrowRight size={20} />
+              </button>
+            )}
+          </div>
+        </ScrollReveal>
       )}
     </CatalogoLayout>
   );
