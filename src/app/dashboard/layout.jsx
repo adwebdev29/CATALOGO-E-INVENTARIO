@@ -16,13 +16,22 @@ export default function DashboardLayout({ children }) {
   // 1. Efecto exclusivo para la Autenticación
   useEffect(() => {
     const checkUser = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      if (!session) {
+      try {
+        const {
+          data: { session },
+          error, // 🟢 Capturamos el error
+        } = await supabase.auth.getSession();
+
+        // 🟢 Si hay un error de token inválido, o no hay sesión, cerramos todo y lo mandamos al login
+        if (error || !session) {
+          if (error) await supabase.auth.signOut();
+          router.push("/portal");
+        } else {
+          setUser(session.user);
+        }
+      } catch (err) {
+        await supabase.auth.signOut();
         router.push("/portal");
-      } else {
-        setUser(session.user);
       }
     };
     checkUser();
@@ -83,7 +92,6 @@ export default function DashboardLayout({ children }) {
             )}
 
             {/* 🟢 SIDEBAR RESPONSIVO Y OCULTABLE */}
-            {/* En móvil es fixed, en PC es static pero se oculta con un margen negativo (-ml-72) */}
             <aside
               className={`fixed md:static inset-y-0 left-0 z-50 w-72 bg-emerald-900 text-white flex flex-col shadow-2xl transition-all duration-300 ease-in-out ${
                 isSidebarOpen

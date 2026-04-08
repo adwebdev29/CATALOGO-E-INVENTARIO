@@ -15,8 +15,8 @@ import {
   ChevronDown,
   ChevronUp,
   User,
-  Eye, // 🟢 Importamos ícono de ojo abierto
-  EyeOff, // 🟢 Importamos ícono de ojo cerrado
+  Eye,
+  EyeOff,
 } from "lucide-react";
 
 export default function ConfiguracionPage() {
@@ -37,9 +37,12 @@ export default function ConfiguracionPage() {
   const [currentName, setCurrentName] = useState("");
   const [isNameLoading, setIsNameLoading] = useState(false);
 
+  // 🟢 ESTADOS PARA CONTRASEÑAS (INCLUYENDO VISIBILIDAD)
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isPasswordLoading, setIsPasswordLoading] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // 🟢 TRAER CONFIGURACIÓN DE PRECIOS
   const fetchConfiguracion = useCallback(async () => {
@@ -492,7 +495,7 @@ export default function ConfiguracionPage() {
         </div>
       </div>
 
-      {/* ── 🟢 SECCIÓN DE VISIBILIDAD DE PRECIOS (NUEVA) ── */}
+      {/* ── SECCIÓN DE VISIBILIDAD DE PRECIOS ── */}
       <div className="bg-white p-6 rounded-2xl shadow-sm border border-[#bec9c2]/30 flex flex-col md:flex-row items-center justify-between gap-6">
         <div className="flex items-start gap-4">
           <div
@@ -582,30 +585,56 @@ export default function ConfiguracionPage() {
             <label className="block text-[10px] font-bold text-[#3f4944] uppercase tracking-widest mb-1">
               Nueva Contraseña
             </label>
-            <input
-              type="password"
-              placeholder="Mínimo 6 caracteres"
-              required
-              minLength={6}
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              className="w-full bg-[#f2f3ff] border border-[#bec9c2]/30 p-3 rounded-lg focus:ring-2 focus:ring-[#004532] focus:outline-none transition-all text-sm"
-            />
+            <div className="relative flex items-center">
+              <input
+                type={showNewPassword ? "text" : "password"}
+                placeholder="Mínimo 6 caracteres"
+                required
+                minLength={6}
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                className="w-full bg-[#f2f3ff] border border-[#bec9c2]/30 p-3 pr-12 rounded-lg focus:ring-2 focus:ring-[#004532] focus:outline-none transition-all text-sm"
+              />
+              <button
+                type="button"
+                onClick={() => setShowNewPassword(!showNewPassword)}
+                className="absolute right-4 text-slate-400 hover:text-[#004532] transition-colors z-10 flex items-center justify-center bg-transparent border-none outline-none"
+                title={
+                  showNewPassword ? "Ocultar contraseña" : "Ver contraseña"
+                }
+              >
+                {showNewPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
+            </div>
           </div>
+
           <div className="w-full">
             <label className="block text-[10px] font-bold text-[#3f4944] uppercase tracking-widest mb-1">
               Confirmar Contraseña
             </label>
-            <input
-              type="password"
-              placeholder="Repite la contraseña"
-              required
-              minLength={6}
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              className="w-full bg-[#f2f3ff] border border-[#bec9c2]/30 p-3 rounded-lg focus:ring-2 focus:ring-[#004532] focus:outline-none transition-all text-sm"
-            />
+            <div className="relative flex items-center">
+              <input
+                type={showConfirmPassword ? "text" : "password"}
+                placeholder="Repite la contraseña"
+                required
+                minLength={6}
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="w-full bg-[#f2f3ff] border border-[#bec9c2]/30 p-3 pr-12 rounded-lg focus:ring-2 focus:ring-[#004532] focus:outline-none transition-all text-sm"
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                className="absolute right-4 text-slate-400 hover:text-[#004532] transition-colors z-10 flex items-center justify-center bg-transparent border-none outline-none"
+                title={
+                  showConfirmPassword ? "Ocultar contraseña" : "Ver contraseña"
+                }
+              >
+                {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
+            </div>
           </div>
+
           <button
             type="submit"
             disabled={isPasswordLoading || !newPassword || !confirmPassword}
