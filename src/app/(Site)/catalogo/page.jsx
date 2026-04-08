@@ -3,7 +3,6 @@ import ProductCard from "@/app/_components/ProductCard";
 import CatalogoLayout from "@/app/_components/CatalogoLayout";
 import Link from "next/link";
 import { ArrowLeft, ArrowRight, PackageX } from "lucide-react";
-// 🟢 Importamos ScrollReveal
 import ScrollReveal from "@/app/_components/ScrollReveal";
 
 export const revalidate = 0;
@@ -14,22 +13,43 @@ export default async function Catalogo(props) {
 
   const busqueda = searchParams?.q || "";
   const categoriaActiva = searchParams?.categoria || "Todos";
+  const subcategoriaActiva = searchParams?.subcategoria || "";
   const marcaActiva = searchParams?.marca || "Todas";
   const currentPage = parseInt(searchParams?.pagina || "1", 10);
 
-  const [resCat, resMar] = await Promise.all([
+  // 🟢 1. Agregamos la consulta para traer los productos que SÍ tienen subcategoría
+  const [resCat, resMar, resSub] = await Promise.all([
     supabase.from("categorias").select("nombre").order("nombre"),
     supabase.from("marcas").select("nombre").order("nombre"),
+    supabase
+      .from("productos")
+      .select("subcategoria")
+      .not("subcategoria", "is", null),
   ]);
 
   const categorias = resCat.data || [];
   const marcas = resMar.data || [];
 
+  // 🟢 2. Extraemos las subcategorías únicas y las ordenamos alfabéticamente
+  const rawSubcategorias = resSub.data || [];
+  const subcategoriasUnicas = [
+    ...new Set(
+      rawSubcategorias.map((item) => item.subcategoria).filter(Boolean),
+    ),
+  ].sort();
+
   let query = supabase.from("productos").select("*", { count: "exact" });
 
   if (busqueda) query = query.ilike("nombre", `%${busqueda}%`);
-  if (categoriaActiva !== "Todos")
+
+  if (categoriaActiva !== "Todos") {
     query = query.eq("categoria", categoriaActiva);
+  }
+
+  if (subcategoriaActiva) {
+    query = query.eq("subcategoria", subcategoriaActiva);
+  }
+
   if (marcaActiva !== "Todas") query = query.eq("marca", marcaActiva);
 
   query = query.order("id", { ascending: false });
@@ -63,7 +83,11 @@ export default async function Catalogo(props) {
   };
 
   return (
-    <CatalogoLayout categorias={categorias} marcas={marcas}>
+    <CatalogoLayout
+      categorias={categorias}
+      marcas={marcas}
+      subcategorias={subcategoriasUnicas}
+    >
       {/* ── RESULTADOS (Grid Inyectado) ── */}
       {!productos || productos.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center">
@@ -84,9 +108,6 @@ export default async function Catalogo(props) {
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-8">
           {productos.map((producto, index) => (
-            // 🟢 AQUÍ ENVOLVEMOS CADA TARJETA.
-            // Usamos un delay muy pequeñito basado en el índice (solo en los primeros 6 para que carguen rápido)
-            // Después del índice 5, todos cargan al instante al hacer scroll.
             <ScrollReveal
               key={producto.id}
               direction="up"

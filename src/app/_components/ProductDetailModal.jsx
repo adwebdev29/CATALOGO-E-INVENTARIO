@@ -1,7 +1,14 @@
 "use client";
 import { useEffect, useState } from "react";
-import { X, ShoppingCart, MessageCircle, Package } from "lucide-react";
+import {
+  X,
+  ShoppingCart,
+  MessageCircle,
+  Package,
+  ShieldCheck,
+} from "lucide-react"; // 🟢 1. Importamos ShieldCheck
 import { useCart } from "@/app/_context/CartContext";
+import Link from "next/link"; // 🟢 2. Importamos Link
 
 export default function ProductDetailModal({ producto, isOpen, onClose }) {
   // 🟢 1. EXTRAEMOS mostrarPrecios DEL CONTEXTO
@@ -76,7 +83,7 @@ export default function ProductDetailModal({ producto, isOpen, onClose }) {
   const MAX_DESC_LENGTH = 120;
   const descripcionCompleta =
     producto.descripcion ||
-    "Equipo industrial de alta precisión y rendimiento garantizado.";
+    "Accesorios de alta precisión y rendimiento garantizado."; // Actualicé el texto genérico para que encaje con electrónica
 
   const isLongDesc = descripcionCompleta.length > MAX_DESC_LENGTH;
   const descripcionMostrar =
@@ -122,14 +129,25 @@ export default function ProductDetailModal({ producto, isOpen, onClose }) {
 
           {/* 🟢 3. CONDICIONAMOS EL PRECIO PRINCIPAL */}
           {mostrarPrecios ? (
-            <p className="text-3xl font-black text-[#004532] mb-4">
+            <p className="text-3xl font-black text-[#004532] mb-2">
               ${(Number(varianteActual.precio) || 0).toLocaleString()}
             </p>
           ) : (
-            <p className="text-lg font-black text-[#004532] mb-4 uppercase tracking-widest">
+            <p className="text-lg font-black text-[#004532] mb-2 uppercase tracking-widest">
               A Cotizar
             </p>
           )}
+
+          {/* 🟢 ENLACE DE GARANTÍA DEBAJO DEL PRECIO */}
+          <Link
+            href="/garantia"
+            onClick={cerrarModal}
+            className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-[#004532] bg-[#e6f4ed] border border-[#004532]/20 px-3 py-1.5 rounded-md mb-6 hover:bg-[#004532] hover:text-white transition-colors w-fit"
+            title="Ver políticas de garantía"
+          >
+            <ShieldCheck size={14} />
+            Garantía de 30 días
+          </Link>
 
           {/* DESCRIPCIÓN CON BOTÓN DE VER MÁS/MENOS */}
           <div className="mb-8">

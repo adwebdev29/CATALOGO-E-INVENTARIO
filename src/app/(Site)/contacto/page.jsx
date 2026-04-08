@@ -500,7 +500,7 @@ export default function Contacto() {
             />
             <div className="absolute bottom-4 left-4 pointer-events-none">
               <div className="bg-[#004532] px-4 py-1 inline-block text-[0.6rem] font-black uppercase tracking-widest text-white rounded-sm shadow-md">
-                Sede Principal CDMX
+                Tienda Oficial
               </div>
             </div>
           </section>

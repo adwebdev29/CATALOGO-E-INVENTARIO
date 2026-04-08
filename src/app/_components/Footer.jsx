@@ -41,6 +41,15 @@ export default function Footer() {
                 Contacto
               </Link>
             </li>
+            {/* 🟢 NUEVO ENLACE A GARANTÍA */}
+            <li>
+              <Link
+                href="/garantia"
+                className="hover:text-white transition-colors flex items-center gap-2"
+              >
+                Política de Garantía
+              </Link>
+            </li>
           </ul>
         </div>
 
@@ -48,7 +57,6 @@ export default function Footer() {
           <h3 className="text-xs font-bold uppercase tracking-widest text-[#8bd6b6] mb-4">
             Contacto
           </h3>
-          {/* 🟢 LISTA ACTUALIZADA CON ENLACES CLICKEABLES */}
           <ul className="space-y-3 text-sm text-slate-300">
             <li>
               <a
@@ -68,7 +76,6 @@ export default function Footer() {
                 wooxmexico@gmail.com
               </a>
             </li>
-            {/* El mapa lo dejamos como texto plano, o si prefieres también puedes enlazarlo a Google Maps */}
             <li>
               <a
                 href="https://maps.app.goo.gl/5WSxmwEPAuHJWCDx6"
@@ -76,7 +83,6 @@ export default function Footer() {
                 rel="noopener noreferrer"
                 className="flex items-start gap-3 hover:text-white transition-colors group"
               >
-                {/* Le puse mt-1 (margin-top) y shrink-0 para que el ícono se quede arriba y no se aplaste */}
                 <MapPin size={16} className="text-[#8bd6b6] shrink-0 mt-1" />
                 <span className="leading-relaxed">
                   Eje Central Lázaro Cárdenas Puente Peredo s/n - Local C,

@@ -1,21 +1,29 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
-import { Search, X, Filter } from "lucide-react";
+import { useTransition, useRef, useState } from "react";
+import { Search, X, Filter, ChevronDown, Loader2 } from "lucide-react";
 
-export default function CatalogoLayout({ categorias, marcas, children }) {
+export default function CatalogoLayout({
+  categorias,
+  marcas,
+  subcategorias = [],
+  children,
+}) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // 🟢 SOURCE OF TRUTH = URL
-  const busqueda = searchParams.get("q") || "";
+  const [isPending, startTransition] = useTransition();
+  const debounceTimer = useRef(null);
+
   const categoria = searchParams.get("categoria") || "Todos";
+  const subcategoria = searchParams.get("subcategoria") || "";
   const marca = searchParams.get("marca") || "Todas";
+  const query = searchParams.get("q") || "";
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [showCablesMenu, setShowCablesMenu] = useState(true);
 
-  // 🟢 ACTUALIZAR URL
   const actualizarFiltros = (key, value) => {
     const params = new URLSearchParams(searchParams.toString());
 
@@ -25,28 +33,42 @@ export default function CatalogoLayout({ categorias, marcas, children }) {
       params.delete(key);
     }
 
-    // Reset paginación futura
+    if (key === "categoria") params.delete("subcategoria");
     params.delete("pagina");
 
-    router.replace(`/catalogo?${params.toString()}`, {
-      scroll: false,
+    startTransition(() => {
+      router.replace(`/catalogo?${params.toString()}`, {
+        scroll: false,
+      });
     });
   };
 
-  // 🟢 BUSCADOR (DEBOUNCE SIN STATE)
   const handleBusquedaLocal = (e) => {
     const val = e.target.value;
 
-    clearTimeout(window.searchTimeout);
+    if (debounceTimer.current) clearTimeout(debounceTimer.current);
 
-    window.searchTimeout = setTimeout(() => {
-      actualizarFiltros("q", val);
-    }, 400);
+    debounceTimer.current = setTimeout(() => {
+      startTransition(() => {
+        const params = new URLSearchParams(searchParams.toString());
+
+        if (val) {
+          params.set("q", val);
+        } else {
+          params.delete("q");
+        }
+
+        params.delete("pagina");
+
+        router.replace(`/catalogo?${params.toString()}`, {
+          scroll: false,
+        });
+      });
+    }, 600);
   };
 
   return (
     <div className="pt-16 flex min-h-screen bg-[#faf8ff] text-[#131b2e] w-full">
-      {/* ── SIDEBAR ── */}
       <aside
         className={`fixed lg:sticky top-16 z-40 lg:z-auto w-72 h-[calc(100vh-4rem)] bg-[#f2f3ff] border-r border-[#bec9c2]/10 p-6 overflow-y-auto transition-transform duration-300 ${
           sidebarOpen
@@ -82,22 +104,77 @@ export default function CatalogoLayout({ categorias, marcas, children }) {
               Todos
             </button>
 
-            {categorias.map((cat) => (
-              <button
-                key={cat.nombre}
-                onClick={() => {
-                  actualizarFiltros("categoria", cat.nombre);
-                  setSidebarOpen(false);
-                }}
-                className={`block w-full text-left px-3 py-2 rounded-md text-sm transition-colors ${
-                  categoria === cat.nombre
-                    ? "bg-[#004532] text-white font-bold shadow-md"
-                    : "text-[#3f4944] hover:bg-[#e2e7ff] hover:text-[#131b2e] font-medium"
-                }`}
-              >
-                {cat.nombre}
-              </button>
-            ))}
+            {categorias.map((cat) => {
+              const isCables = cat.nombre.includes("Cables");
+
+              return (
+                <div key={cat.nombre} className="flex flex-col">
+                  <button
+                    onClick={() => {
+                      if (isCables) {
+                        setShowCablesMenu(!showCablesMenu);
+                        if (categoria !== cat.nombre) {
+                          actualizarFiltros("categoria", cat.nombre);
+                        }
+                      } else {
+                        actualizarFiltros("categoria", cat.nombre);
+                        setSidebarOpen(false);
+                      }
+                    }}
+                    className={`flex items-center justify-between w-full text-left px-3 py-2 rounded-md text-sm transition-colors ${
+                      categoria === cat.nombre && !subcategoria
+                        ? "bg-[#004532] text-white font-bold shadow-md"
+                        : "text-[#3f4944] hover:bg-[#e2e7ff] hover:text-[#131b2e] font-medium"
+                    }`}
+                  >
+                    {cat.nombre}
+
+                    {isCables && subcategorias.length > 0 && (
+                      <ChevronDown
+                        size={16}
+                        className={`transition-transform duration-200 ${
+                          showCablesMenu ? "rotate-180" : ""
+                        }`}
+                      />
+                    )}
+                  </button>
+
+                  {isCables && showCablesMenu && subcategorias.length > 0 && (
+                    <div className="ml-4 mt-1 mb-2 flex flex-col border-l-2 border-[#bec9c2]/30 pl-2 space-y-1">
+                      {subcategorias.map((sub) => (
+                        <button
+                          key={sub}
+                          onClick={() => {
+                            const params = new URLSearchParams(
+                              searchParams.toString(),
+                            );
+
+                            params.set("categoria", cat.nombre);
+                            params.set("subcategoria", sub);
+                            params.delete("pagina");
+
+                            startTransition(() => {
+                              router.replace(`/catalogo?${params.toString()}`, {
+                                scroll: false,
+                              });
+                            });
+
+                            setSidebarOpen(false);
+                          }}
+                          className={`text-left text-xs py-1.5 px-2 rounded transition-colors ${
+                            subcategoria === sub
+                              ? "text-[#004532] font-black bg-[#e6f4ed]"
+                              : "text-[#3f4944] hover:text-[#131b2e] hover:bg-[#e2e7ff] font-medium"
+                          }`}
+                        >
+                          • {sub}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
 
@@ -136,7 +213,6 @@ export default function CatalogoLayout({ categorias, marcas, children }) {
         </div>
       </aside>
 
-      {/* ── OVERLAY ── */}
       {sidebarOpen && (
         <div
           className="fixed inset-0 bg-[#131b2e]/60 z-30 lg:hidden"
@@ -144,40 +220,60 @@ export default function CatalogoLayout({ categorias, marcas, children }) {
         />
       )}
 
-      {/* ── MAIN ── */}
       <main className="flex-1 p-6 md:p-10 w-full overflow-hidden">
-        {/* HEADER */}
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl md:text-4xl font-black uppercase tracking-tighter">
+        <div className="flex justify-between items-start mb-8">
+          <h1 className="text-3xl md:text-4xl font-black uppercase tracking-tighter flex flex-col">
             {categoria}
+            {subcategoria && (
+              <span className="text-lg text-[#004532] mt-1 tracking-widest">
+                / {subcategoria}
+              </span>
+            )}
           </h1>
 
           <button
             onClick={() => setSidebarOpen(true)}
-            className="lg:hidden flex items-center gap-2 border-2 border-[#131b2e] px-4 py-2 text-sm font-bold rounded-lg hover:bg-[#131b2e] hover:text-white"
+            className="lg:hidden flex items-center gap-2 border-2 border-[#131b2e] px-4 py-2 text-sm font-bold rounded-lg hover:bg-[#131b2e] hover:text-white mt-1 shrink-0"
           >
             <Filter size={16} /> Filtros
           </button>
         </div>
 
-        {/* BUSCADOR */}
+        {/* 🔍 BUSCADOR SIN useEffect */}
         <div className="relative mb-8 max-w-md">
-          <Search
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
-            size={20}
-          />
+          {isPending ? (
+            <Loader2
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-[#004532] animate-spin"
+              size={20}
+            />
+          ) : (
+            <Search
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+              size={20}
+            />
+          )}
 
           <input
+            key={query} // 🔥 reinicia cuando cambia la URL
             type="text"
             placeholder="Buscar en catálogo..."
-            value={busqueda}
+            defaultValue={query}
             onChange={handleBusquedaLocal}
-            className="border-2 border-[#bec9c2]/30 p-3 pl-10 w-full rounded-lg focus:outline-none focus:border-[#004532]"
+            className={`border-2 border-[#bec9c2]/30 p-3 pl-10 w-full rounded-lg focus:outline-none transition-colors ${
+              isPending
+                ? "bg-slate-50 focus:border-[#bec9c2]/50"
+                : "focus:border-[#004532]"
+            }`}
           />
         </div>
 
-        {/* CONTENIDO (SERVER) */}
-        {children}
+        <div
+          className={`transition-opacity duration-300 ${
+            isPending ? "opacity-50 pointer-events-none" : "opacity-100"
+          }`}
+        >
+          {children}
+        </div>
       </main>
     </div>
   );
