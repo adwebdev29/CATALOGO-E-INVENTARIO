@@ -2,19 +2,16 @@
 import { useState, useEffect } from "react";
 import Swal from "sweetalert2";
 import { supabase } from "@/app/_lib/supabase/supabase";
+import ProductFormModal from "@/app/_components/ProductFormModal";
 import {
   Plus,
   Pencil,
   Trash2,
-  X,
   Package,
-  Tag,
   Image as ImageIcon,
-  UploadCloud,
-  Link as LinkIcon,
   ChevronLeft,
   ChevronRight,
-  Search, // 🟢 Agregamos el ícono de búsqueda
+  Search,
 } from "lucide-react";
 
 export default function GestionProductos() {
@@ -22,39 +19,18 @@ export default function GestionProductos() {
   const [categorias, setCategorias] = useState([]);
   const [marcas, setMarcas] = useState([]);
 
+  // ESTADOS DEL MODAL
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingId, setEditingId] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState(null);
 
-  // 🟢 ESTADOS PARA LOS FILTROS
+  // ESTADOS PARA LOS FILTROS
   const [searchTerm, setSearchTerm] = useState("");
   const [filterCategoria, setFilterCategoria] = useState("");
   const [filterMarca, setFilterMarca] = useState("");
 
-  // ESTADOS PARA LA SUBIDA DE IMÁGENES
-  const [useLocalImage, setUseLocalImage] = useState(false);
-  const [imageFile, setImageFile] = useState(null);
-  const [previewUrl, setPreviewUrl] = useState("");
-
   // ESTADOS PARA PAGINACIÓN
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
-
-  const [formData, setFormData] = useState({
-    nombre: "",
-    descripcion: "",
-    categoria: "",
-    marca: "",
-    imagen_url: "",
-    destacado: false,
-    stock: 0,
-    etiqueta_1: "1 Pieza",
-    precio: "",
-    etiqueta_2: "",
-    precio_2: "",
-    etiqueta_3: "",
-    precio_3: "",
-  });
 
   useEffect(() => {
     fetchData();
@@ -62,7 +38,6 @@ export default function GestionProductos() {
 
   const fetchData = async () => {
     const [resProd, resCat, resMar] = await Promise.all([
-      // 🟢 ORDEN POR ID ASCENDENTE (del más antiguo/bajo al más nuevo/alto)
       supabase.from("productos").select("*").order("id", { ascending: true }),
       supabase.from("categorias").select("nombre").order("nombre"),
       supabase.from("marcas").select("nombre").order("nombre"),
@@ -73,7 +48,7 @@ export default function GestionProductos() {
     if (resMar.data) setMarcas(resMar.data);
   };
 
-  // 🟢 LÓGICA DE FILTRADO
+  // LÓGICA DE FILTRADO
   const filteredProducts = productos.filter((p) => {
     const matchSearch = p.nombre
       .toLowerCase()
@@ -85,7 +60,7 @@ export default function GestionProductos() {
     return matchSearch && matchCategoria && matchMarca;
   });
 
-  // 🟢 LÓGICA DE PAGINACIÓN (Aplicada sobre los productos ya filtrados)
+  // LÓGICA DE PAGINACIÓN
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentProducts = filteredProducts.slice(
@@ -94,172 +69,13 @@ export default function GestionProductos() {
   );
   const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
 
-  // 🟢 Si cambian los filtros, regresamos a la página 1 para evitar ver listas vacías
   useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm, filterCategoria, filterMarca]);
 
-  const nextPage = () => {
-    if (currentPage < totalPages) setCurrentPage(currentPage + 1);
-  };
-
-  const prevPage = () => {
-    if (currentPage > 1) setCurrentPage(currentPage - 1);
-  };
-
   const openModal = (producto = null) => {
-    setImageFile(null);
-    setUseLocalImage(false);
-
-    if (producto) {
-      setEditingId(producto.id);
-      setPreviewUrl(producto.imagen_url || "");
-      setFormData({
-        nombre: producto.nombre || "",
-        descripcion: producto.descripcion || "",
-        categoria: producto.categoria || "",
-        marca: producto.marca || "",
-        imagen_url: producto.imagen_url || "",
-        destacado: producto.destacado || false,
-        stock: producto.stock || 0,
-        etiqueta_1: producto.etiqueta_1 || "1 Pieza",
-        precio: producto.precio || "",
-        etiqueta_2: producto.etiqueta_2 || "",
-        precio_2: producto.precio_2 || "",
-        etiqueta_3: producto.etiqueta_3 || "",
-        precio_3: producto.precio_3 || "",
-      });
-    } else {
-      setEditingId(null);
-      setPreviewUrl("");
-      setFormData({
-        nombre: "",
-        descripcion: "",
-        categoria: categorias[0]?.nombre || "",
-        marca: marcas[0]?.nombre || "",
-        imagen_url: "",
-        destacado: false,
-        stock: 0,
-        etiqueta_1: "1 Pieza",
-        precio: "",
-        etiqueta_2: "",
-        precio_2: "",
-        etiqueta_3: "",
-        precio_3: "",
-      });
-    }
+    setSelectedProduct(producto);
     setIsModalOpen(true);
-  };
-
-  const closeModal = () => {
-    setIsModalOpen(false);
-    setEditingId(null);
-    setImageFile(null);
-    setPreviewUrl("");
-  };
-
-  const optimizeImage = (file) => {
-    return new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = (event) => {
-        const img = new Image();
-        img.src = event.target.result;
-        img.onload = () => {
-          const canvas = document.createElement("canvas");
-          const MAX_WIDTH = 800;
-          let scaleSize = 1;
-
-          if (img.width > MAX_WIDTH) {
-            scaleSize = MAX_WIDTH / img.width;
-          }
-
-          canvas.width = img.width * scaleSize;
-          canvas.height = img.height * scaleSize;
-
-          const ctx = canvas.getContext("2d");
-          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-
-          canvas.toBlob(
-            (blob) => {
-              resolve(blob);
-            },
-            "image/webp",
-            0.8,
-          );
-        };
-      };
-    });
-  };
-
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setImageFile(file);
-      setPreviewUrl(URL.createObjectURL(file));
-    }
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsLoading(true);
-
-    try {
-      let finalImageUrl = formData.imagen_url;
-
-      if (useLocalImage && imageFile) {
-        const optimizedBlob = await optimizeImage(imageFile);
-        const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.webp`;
-
-        const { error: uploadError } = await supabase.storage
-          .from("productos")
-          .upload(fileName, optimizedBlob, {
-            contentType: "image/webp",
-            cacheControl: "3600",
-            upsert: false,
-          });
-
-        if (uploadError)
-          throw new Error("Error al subir la imagen: " + uploadError.message);
-
-        const { data: publicUrlData } = supabase.storage
-          .from("productos")
-          .getPublicUrl(fileName);
-        finalImageUrl = publicUrlData.publicUrl;
-      }
-
-      const payload = {
-        ...formData,
-        imagen_url: finalImageUrl,
-        precio: formData.precio ? parseFloat(formData.precio) : 0,
-        precio_2: formData.precio_2 ? parseFloat(formData.precio_2) : null,
-        precio_3: formData.precio_3 ? parseFloat(formData.precio_3) : null,
-        stock: parseInt(formData.stock) || 0,
-      };
-
-      if (editingId) {
-        const { error } = await supabase
-          .from("productos")
-          .update(payload)
-          .eq("id", editingId);
-        if (error) throw error;
-      } else {
-        const { error } = await supabase.from("productos").insert([payload]);
-        if (error) throw error;
-      }
-
-      await fetchData();
-      closeModal();
-    } catch (error) {
-      Swal.fire({
-        title: "Error al guardar:",
-        text: error.message,
-        icon: "error",
-        confirmButtonColor: "#d33",
-      });
-    } finally {
-      setIsLoading(false);
-    }
   };
 
   const handleDelete = async (id) => {
@@ -274,31 +90,12 @@ export default function GestionProductos() {
         try {
           const url = new URL(productoAEliminar.imagen_url);
           const pathSegments = url.pathname.split("/");
-          let fileName = pathSegments[pathSegments.length - 1];
-
-          fileName = decodeURIComponent(fileName);
-
-          console.log("Intentando borrar archivo exacto:", fileName);
-
-          const { data, error: storageError } = await supabase.storage
-            .from("productos")
-            .remove([fileName]);
-
-          if (storageError) {
-            console.error("Error de Supabase Storage:", storageError.message);
-
-            Swal.fire({
-              title: "Producto eliminado",
-              text: "El registro se eliminó correctamente, pero hubo un detalle al intentar borrar la imagen del servidor. El espacio se liberará manualmente después.",
-              icon: "warning",
-              confirmButtonColor: "#131b2e", // Tu azul oscuro de WOOX
-              confirmButtonText: "Entendido",
-            });
-          } else {
-            console.log("Imagen borrada del bucket exitosamente:", data);
-          }
+          let fileName = decodeURIComponent(
+            pathSegments[pathSegments.length - 1],
+          );
+          await supabase.storage.from("productos").remove([fileName]);
         } catch (urlError) {
-          console.error("Error al procesar la URL de la imagen:", urlError);
+          console.error("Error al borrar imagen:", urlError);
         }
       }
 
@@ -306,17 +103,10 @@ export default function GestionProductos() {
       if (error) throw error;
 
       await fetchData();
-
-      if (currentProducts.length === 1 && currentPage > 1) {
+      if (currentProducts.length === 1 && currentPage > 1)
         setCurrentPage(currentPage - 1);
-      }
     } catch (error) {
-      Swal.fire({
-        title: "Error al eliminar el registro: ",
-        text: error.message,
-        icon: "error",
-        confirmButtonColor: "#d33",
-      });
+      Swal.fire({ title: "Error", text: error.message, icon: "error" });
     }
   };
 
@@ -329,7 +119,7 @@ export default function GestionProductos() {
             <Package className="text-[#004532]" /> Catálogo de Productos
           </h1>
           <p className="text-sm text-[#3f4944] mt-1">
-            Gestiona tu inventario y precios por volumen.
+            Gestiona tu inventario y precios por volumen de forma inteligente.
           </p>
         </div>
         <button
@@ -340,7 +130,7 @@ export default function GestionProductos() {
         </button>
       </div>
 
-      {/* 🟢 BARRA DE FILTROS */}
+      {/* BARRA DE FILTROS */}
       <div className="bg-white p-4 rounded-xl shadow-sm border border-[#bec9c2]/30 mb-6 flex flex-col md:flex-row gap-4 items-center">
         <div className="relative flex-1 w-full">
           <Search
@@ -352,14 +142,14 @@ export default function GestionProductos() {
             placeholder="Buscar por nombre..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 bg-[#f8faf9] border border-[#bec9c2]/40 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#004532] transition-all"
+            className="w-full pl-10 pr-4 py-2 bg-[#f8faf9] border border-[#bec9c2]/40 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#004532]"
           />
         </div>
         <div className="flex gap-4 w-full md:w-auto">
           <select
             value={filterCategoria}
             onChange={(e) => setFilterCategoria(e.target.value)}
-            className="w-full md:w-48 py-2 px-3 bg-[#f8faf9] border border-[#bec9c2]/40 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#004532] text-[#3f4944] transition-all cursor-pointer"
+            className="w-full md:w-48 py-2 px-3 bg-[#f8faf9] border border-[#bec9c2]/40 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#004532] text-[#3f4944]"
           >
             <option value="">Todas las Categorías</option>
             {categorias.map((c) => (
@@ -371,7 +161,7 @@ export default function GestionProductos() {
           <select
             value={filterMarca}
             onChange={(e) => setFilterMarca(e.target.value)}
-            className="w-full md:w-48 py-2 px-3 bg-[#f8faf9] border border-[#bec9c2]/40 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#004532] text-[#3f4944] transition-all cursor-pointer"
+            className="w-full md:w-48 py-2 px-3 bg-[#f8faf9] border border-[#bec9c2]/40 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#004532] text-[#3f4944]"
           >
             <option value="">Todas las Marcas</option>
             {marcas.map((m) => (
@@ -392,7 +182,7 @@ export default function GestionProductos() {
                 <th className="p-4 rounded-tl-xl">Producto</th>
                 <th className="p-4">Categoría</th>
                 <th className="p-4">Precio Base</th>
-                <th className="p-4">Variantes</th>
+                <th className="p-4">Mayoreos</th>
                 <th className="p-4">Stock</th>
                 <th className="p-4 text-center rounded-tr-xl">Acciones</th>
               </tr>
@@ -433,16 +223,16 @@ export default function GestionProductos() {
                         className="w-2 h-2 rounded-full bg-[#004532]"
                         title="Nivel 1 configurado"
                       ></span>
-                      {p.precio_2 && (
+                      {p.min_2 && (
                         <span
                           className="w-2 h-2 rounded-full bg-emerald-500"
-                          title="Nivel 2 configurado"
+                          title={`Min 2: ${p.min_2} pzas`}
                         ></span>
                       )}
-                      {p.precio_3 && (
+                      {p.min_3 && (
                         <span
                           className="w-2 h-2 rounded-full bg-teal-400"
-                          title="Nivel 3 configurado"
+                          title={`Min 3: ${p.min_3} pzas`}
                         ></span>
                       )}
                     </div>
@@ -477,32 +267,35 @@ export default function GestionProductos() {
           </table>
         </div>
 
-        {/* 🟢 CONTROLES DE PAGINACIÓN */}
+        {/* CONTROLES DE PAGINACIÓN */}
         {filteredProducts.length > 0 && (
           <div className="flex flex-col sm:flex-row items-center justify-between p-4 border-t border-[#bec9c2]/30 gap-4 bg-white rounded-b-xl">
             <span className="text-xs text-[#3f4944] font-medium">
               Mostrando {indexOfFirstItem + 1} a{" "}
               {Math.min(indexOfLastItem, filteredProducts.length)} de{" "}
-              {filteredProducts.length} productos
+              {filteredProducts.length}
             </span>
-
             <div className="flex items-center gap-2">
               <button
-                onClick={prevPage}
+                onClick={() =>
+                  setCurrentPage(currentPage > 1 ? currentPage - 1 : 1)
+                }
                 disabled={currentPage === 1}
-                className="p-2 rounded-lg border border-[#bec9c2]/30 text-[#131b2e] hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="p-2 rounded-lg border border-[#bec9c2]/30 text-[#131b2e] hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <ChevronLeft size={16} />
               </button>
-
               <span className="text-xs font-bold px-3 text-[#131b2e]">
                 Página {currentPage} de {totalPages}
               </span>
-
               <button
-                onClick={nextPage}
+                onClick={() =>
+                  setCurrentPage(
+                    currentPage < totalPages ? currentPage + 1 : totalPages,
+                  )
+                }
                 disabled={currentPage === totalPages}
-                className="p-2 rounded-lg border border-[#bec9c2]/30 text-[#131b2e] hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="p-2 rounded-lg border border-[#bec9c2]/30 text-[#131b2e] hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <ChevronRight size={16} />
               </button>
@@ -511,331 +304,15 @@ export default function GestionProductos() {
         )}
       </div>
 
-      {/* MODAL DE FORMULARIO */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#131b2e]/60 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-white w-full max-w-3xl rounded-2xl shadow-2xl flex flex-col max-h-[90vh]">
-            <div className="flex justify-between items-center p-6 border-b border-[#bec9c2]/30 bg-[#f8faf9] rounded-t-2xl shrink-0">
-              <h2 className="text-xl font-black text-[#131b2e]">
-                {editingId ? "Editar Producto" : "Nuevo Producto"}
-              </h2>
-              <button
-                onClick={closeModal}
-                className="text-slate-400 hover:text-red-500 transition-colors"
-              >
-                <X size={24} />
-              </button>
-            </div>
-
-            <form
-              onSubmit={handleSubmit}
-              className="p-6 overflow-y-auto space-y-8"
-            >
-              <div className="space-y-4">
-                <h3 className="font-bold text-[#004532] text-xs uppercase tracking-widest flex items-center gap-2 border-b border-[#bec9c2]/20 pb-2">
-                  <Tag size={16} /> Información Básica
-                </h3>
-
-                <div className="bg-[#f8faf9] p-4 rounded-xl border border-[#bec9c2]/30 flex flex-col md:flex-row gap-6 items-start">
-                  <div className="w-24 h-24 shrink-0 bg-white border border-[#bec9c2]/40 rounded-lg overflow-hidden flex items-center justify-center">
-                    {previewUrl || formData.imagen_url ? (
-                      <img
-                        src={previewUrl || formData.imagen_url}
-                        alt="Preview"
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <ImageIcon className="text-[#bec9c2] w-8 h-8" />
-                    )}
-                  </div>
-
-                  <div className="flex-1 w-full space-y-3">
-                    <div className="flex items-center gap-4">
-                      <label className="flex items-center gap-2 text-sm font-bold text-[#131b2e] cursor-pointer">
-                        <input
-                          type="radio"
-                          name="imageType"
-                          checked={!useLocalImage}
-                          onChange={() => setUseLocalImage(false)}
-                          className="accent-[#004532]"
-                        />
-                        <LinkIcon size={16} className="text-[#3f4944]" /> Usar
-                        Enlace URL
-                      </label>
-                      <label className="flex items-center gap-2 text-sm font-bold text-[#131b2e] cursor-pointer">
-                        <input
-                          type="radio"
-                          name="imageType"
-                          checked={useLocalImage}
-                          onChange={() => setUseLocalImage(true)}
-                          className="accent-[#004532]"
-                        />
-                        <UploadCloud size={16} className="text-[#3f4944]" />{" "}
-                        Subir desde dispositivo
-                      </label>
-                    </div>
-
-                    {useLocalImage ? (
-                      <div className="relative">
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={handleFileChange}
-                          required={!editingId && !formData.imagen_url}
-                          className="w-full text-sm text-[#3f4944] file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-[#004532] file:text-white hover:file:bg-[#131b2e] transition-all cursor-pointer bg-white border border-[#bec9c2]/30 rounded-lg p-1"
-                        />
-                        <p className="text-[10px] text-emerald-600 mt-1 font-bold">
-                          Se comprimirá automáticamente a WebP para ahorrar
-                          espacio.
-                        </p>
-                      </div>
-                    ) : (
-                      <input
-                        type="url"
-                        placeholder="https://..."
-                        value={formData.imagen_url}
-                        onChange={(e) => {
-                          setFormData({
-                            ...formData,
-                            imagen_url: e.target.value,
-                          });
-                          setPreviewUrl(e.target.value);
-                        }}
-                        className="w-full bg-white border border-[#bec9c2]/30 p-2.5 rounded-lg focus:ring-2 focus:ring-[#004532] outline-none text-sm"
-                      />
-                    )}
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-bold text-[#3f4944] uppercase tracking-wider mb-1">
-                      Nombre
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={formData.nombre}
-                      onChange={(e) =>
-                        setFormData({ ...formData, nombre: e.target.value })
-                      }
-                      className="w-full bg-[#f2f3ff] border border-[#bec9c2]/30 p-2.5 rounded-lg focus:ring-2 focus:ring-[#004532] outline-none text-sm"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-[#3f4944] uppercase tracking-wider mb-1">
-                      Categoría
-                    </label>
-                    <select
-                      required
-                      value={formData.categoria}
-                      onChange={(e) =>
-                        setFormData({ ...formData, categoria: e.target.value })
-                      }
-                      className="w-full bg-[#f2f3ff] border border-[#bec9c2]/30 p-2.5 rounded-lg focus:ring-2 focus:ring-[#004532] outline-none text-sm"
-                    >
-                      <option value="">Selecciona...</option>
-                      {categorias.map((c) => (
-                        <option key={c.nombre} value={c.nombre}>
-                          {c.nombre}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-bold text-[#3f4944] uppercase tracking-wider mb-1">
-                      Marca
-                    </label>
-                    <select
-                      value={formData.marca}
-                      onChange={(e) =>
-                        setFormData({ ...formData, marca: e.target.value })
-                      }
-                      className="w-full bg-[#f2f3ff] border border-[#bec9c2]/30 p-2.5 rounded-lg focus:ring-2 focus:ring-[#004532] outline-none text-sm"
-                    >
-                      <option value="">Ninguna</option>
-                      {marcas.map((m) => (
-                        <option key={m.nombre} value={m.nombre}>
-                          {m.nombre}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="flex gap-4">
-                    <div className="flex-1">
-                      <label className="block text-xs font-bold text-[#3f4944] uppercase tracking-wider mb-1">
-                        Stock
-                      </label>
-                      <input
-                        type="number"
-                        value={formData.stock}
-                        onChange={(e) =>
-                          setFormData({ ...formData, stock: e.target.value })
-                        }
-                        className="w-full bg-[#f2f3ff] border border-[#bec9c2]/30 p-2.5 rounded-lg focus:ring-2 focus:ring-[#004532] outline-none text-sm"
-                      />
-                    </div>
-                    <div className="flex items-center pt-5">
-                      <label className="flex items-center gap-2 text-xs font-bold text-[#131b2e] uppercase tracking-wider cursor-pointer bg-[#e6f4ed] p-2.5 rounded-lg">
-                        <input
-                          type="checkbox"
-                          checked={formData.destacado}
-                          onChange={(e) =>
-                            setFormData({
-                              ...formData,
-                              destacado: e.target.checked,
-                            })
-                          }
-                          className="w-4 h-4 accent-[#004532]"
-                        />
-                        ⭐ Destacar
-                      </label>
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-[#3f4944] uppercase tracking-wider mb-1">
-                    Descripción
-                  </label>
-                  <textarea
-                    rows={2}
-                    value={formData.descripcion}
-                    onChange={(e) =>
-                      setFormData({ ...formData, descripcion: e.target.value })
-                    }
-                    className="w-full bg-[#f2f3ff] border border-[#bec9c2]/30 p-2.5 rounded-lg focus:ring-2 focus:ring-[#004532] outline-none text-sm resize-none"
-                  />
-                </div>
-              </div>
-
-              <div className="bg-[#f8faf9] p-5 rounded-xl border border-[#bec9c2]/30 space-y-5">
-                <h3 className="font-bold text-[#004532] text-xs uppercase tracking-widest flex items-center gap-2 mb-2">
-                  <Package size={16} /> Precios y Presentaciones (Variantes)
-                </h3>
-
-                <div className="grid grid-cols-2 gap-4 items-end bg-white p-3 rounded-lg border border-[#bec9c2]/20 shadow-sm border-l-4 border-l-[#131b2e]">
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">
-                      Etiqueta Principal *
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={formData.etiqueta_1}
-                      onChange={(e) =>
-                        setFormData({ ...formData, etiqueta_1: e.target.value })
-                      }
-                      placeholder="Ej. 1 Pieza"
-                      className="w-full bg-slate-50 border border-slate-200 p-2 rounded-md outline-none focus:border-[#004532] text-sm font-bold"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">
-                      Precio Base ($) *
-                    </label>
-                    <input
-                      type="number"
-                      required
-                      value={formData.precio}
-                      onChange={(e) =>
-                        setFormData({ ...formData, precio: e.target.value })
-                      }
-                      placeholder="0.00"
-                      className="w-full bg-slate-50 border border-slate-200 p-2 rounded-md outline-none focus:border-[#004532] text-sm font-bold text-[#004532]"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4 items-end bg-white p-3 rounded-lg border border-[#bec9c2]/20 shadow-sm border-l-4 border-l-[#004532]">
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">
-                      Etiqueta Nivel 2 (Opcional)
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.etiqueta_2}
-                      onChange={(e) =>
-                        setFormData({ ...formData, etiqueta_2: e.target.value })
-                      }
-                      placeholder="Ej. Pack 5 Pzas"
-                      className="w-full bg-slate-50 border border-slate-200 p-2 rounded-md outline-none focus:border-[#004532] text-sm"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">
-                      Precio Nivel 2 ($)
-                    </label>
-                    <input
-                      type="number"
-                      value={formData.precio_2}
-                      onChange={(e) =>
-                        setFormData({ ...formData, precio_2: e.target.value })
-                      }
-                      placeholder="0.00"
-                      className="w-full bg-slate-50 border border-slate-200 p-2 rounded-md outline-none focus:border-[#004532] text-sm font-bold"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4 items-end bg-white p-3 rounded-lg border border-[#bec9c2]/20 shadow-sm border-l-4 border-l-emerald-500">
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">
-                      Etiqueta Nivel 3 (Opcional)
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.etiqueta_3}
-                      onChange={(e) =>
-                        setFormData({ ...formData, etiqueta_3: e.target.value })
-                      }
-                      placeholder="Ej. Caja 20 Pzas"
-                      className="w-full bg-slate-50 border border-slate-200 p-2 rounded-md outline-none focus:border-[#004532] text-sm"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">
-                      Precio Nivel 3 ($)
-                    </label>
-                    <input
-                      type="number"
-                      value={formData.precio_3}
-                      onChange={(e) =>
-                        setFormData({ ...formData, precio_3: e.target.value })
-                      }
-                      placeholder="0.00"
-                      className="w-full bg-slate-50 border border-slate-200 p-2 rounded-md outline-none focus:border-[#004532] text-sm font-bold"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex justify-end gap-3 pt-4 border-t border-[#bec9c2]/30">
-                <button
-                  type="button"
-                  onClick={closeModal}
-                  className="px-6 py-3 font-bold text-slate-500 hover:bg-slate-100 rounded-xl transition-colors text-xs uppercase tracking-widest"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className="bg-[#131b2e] hover:bg-[#004532] text-white px-8 py-3 rounded-xl font-bold text-xs uppercase tracking-widest shadow-md hover:shadow-lg transition-all disabled:opacity-50 flex items-center gap-2"
-                >
-                  {isLoading && (
-                    <UploadCloud size={16} className="animate-bounce" />
-                  )}
-                  {isLoading ? "Subiendo..." : "Guardar Producto"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      {/* RENDERIZADO DEL COMPONENTE MODAL */}
+      <ProductFormModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        categorias={categorias}
+        marcas={marcas}
+        productoAEditar={selectedProduct}
+        onSaveSuccess={fetchData}
+      />
     </div>
   );
 }

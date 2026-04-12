@@ -1,19 +1,40 @@
 "use client";
 import { createContext, useContext, useState, useEffect } from "react";
-// 🟢 1. Importamos tu cliente de Supabase
 import { supabase } from "../_lib/supabase/supabase";
 
 const CartContext = createContext();
+
+// 🟢 1. LA FUNCIÓN MÁGICA: Calcula el precio según la cantidad
+const calcularPrecioMayoreo = (producto, cantidad) => {
+  const min1 = producto.min_1 || 1;
+  const min2 = producto.min_2 || Infinity; // Si es 0 o null, será Infinity
+  const min3 = producto.min_3 || Infinity;
+
+  if (cantidad >= min3 && producto.precio_3) {
+    return {
+      precioActual: producto.precio_3,
+      etiquetaActual: producto.etiqueta_3,
+    };
+  } else if (cantidad >= min2 && producto.precio_2) {
+    return {
+      precioActual: producto.precio_2,
+      etiquetaActual: producto.etiqueta_2,
+    };
+  } else {
+    return {
+      precioActual: producto.precio,
+      etiquetaActual: producto.etiqueta_1 || "1 Pieza",
+    };
+  }
+};
 
 export function CartProvider({ children }) {
   const [cart, setCart] = useState([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
-
-  // 🟢 2. NUEVO ESTADO: Control maestro de visibilidad de precios (por defecto true)
   const [mostrarPrecios, setMostrarPrecios] = useState(true);
 
-  // 🟢 3. FETCH CONFIGURACIÓN: Leemos el interruptor desde la base de datos al cargar la app
+  // FETCH CONFIGURACIÓN
   useEffect(() => {
     const fetchConfiguracion = async () => {
       try {
@@ -22,9 +43,7 @@ export function CartProvider({ children }) {
           .select("mostrar_precios")
           .eq("id", 1)
           .single();
-
         if (error) throw error;
-
         if (data !== null) {
           setMostrarPrecios(data.mostrar_precios);
         }
@@ -32,14 +51,12 @@ export function CartProvider({ children }) {
         console.error("Error al cargar la configuración de precios:", error);
       }
     };
-
     fetchConfiguracion();
   }, []);
 
-  // 1. Cargar el carrito desde localStorage al iniciar (Corregido para React 19)
+  // 🟢 2. Cargar carrito (Forma correcta para Next.js sin setTimeout)
   useEffect(() => {
-    // Envolverlo en un setTimeout asíncrono elimina el error de "cascading renders"
-    const timer = setTimeout(() => {
+    if (typeof window !== "undefined") {
       const savedCart = localStorage.getItem("woox_cart");
       if (savedCart) {
         try {
@@ -49,104 +66,92 @@ export function CartProvider({ children }) {
         }
       }
       setIsLoaded(true);
-    }, 0);
-
-    return () => clearTimeout(timer);
+    }
   }, []);
 
-  // 2. Guardar en localStorage cada vez que el carrito cambie
+  // Guardar en localStorage
   useEffect(() => {
     if (isLoaded) {
       localStorage.setItem("woox_cart", JSON.stringify(cart));
     }
   }, [cart, isLoaded]);
 
-  // 3. Agregar al carrito
-  const addToCart = (product) => {
+  // 🟢 3. Agregar al carrito (Ahora recibe cantidadInicial)
+  const addToCart = (product, cantidadInicial = 1) => {
     setCart((prevCart) => {
+      // Ya no usamos el ID modificado con "-1", buscamos el ID real
       const existingItem = prevCart.find((item) => item.id === product.id);
 
       if (existingItem) {
+        const nuevaCantidad = existingItem.quantity + cantidadInicial;
+        const { precioActual, etiquetaActual } = calcularPrecioMayoreo(
+          product,
+          nuevaCantidad,
+        );
+
         return prevCart.map((item) =>
           item.id === product.id
-            ? { ...item, quantity: item.quantity + 1 }
+            ? {
+                ...item,
+                quantity: nuevaCantidad,
+                precio: precioActual,
+                etiquetaActual,
+              }
             : item,
         );
       }
-      return [...prevCart, { ...product, quantity: 1 }];
+
+      const { precioActual, etiquetaActual } = calcularPrecioMayoreo(
+        product,
+        cantidadInicial,
+      );
+      return [
+        ...prevCart,
+        {
+          ...product,
+          quantity: cantidadInicial,
+          precio: precioActual,
+          etiquetaActual,
+        },
+      ];
     });
     setIsCartOpen(true);
   };
 
-  // 4. Eliminar del carrito
   const removeFromCart = (productId) => {
     setCart((prevCart) => prevCart.filter((item) => item.id !== productId));
   };
 
-  // 5. Actualizar cantidad (+ / -)
+  // 🟢 4. Actualizar cantidad (Recalcula el precio en cada click)
   const updateQuantity = (productId, newQuantity) => {
     if (newQuantity <= 0) {
       removeFromCart(productId);
       return;
     }
     setCart((prevCart) =>
-      prevCart.map((item) =>
-        item.id === productId ? { ...item, quantity: newQuantity } : item,
-      ),
+      prevCart.map((item) => {
+        if (item.id === productId) {
+          const { precioActual, etiquetaActual } = calcularPrecioMayoreo(
+            item,
+            newQuantity,
+          );
+          return {
+            ...item,
+            quantity: newQuantity,
+            precio: precioActual,
+            etiquetaActual,
+          };
+        }
+        return item;
+      }),
     );
   };
 
-  // 6. Vaciar todo el carrito
   const clearCart = () => {
     setCart([]);
   };
 
-  // 7. Cambiar la variante de un producto que ya está en el carrito
-  const changeItemVariant = (oldId, newVariantOption, fullProductData) => {
-    setCart((prevCart) => {
-      const newPrice =
-        newVariantOption === 1
-          ? fullProductData.precio
-          : newVariantOption === 2
-            ? fullProductData.precio_2
-            : fullProductData.precio_3;
-      const newTag =
-        newVariantOption === 1
-          ? fullProductData.etiqueta_1 || "1 Pieza"
-          : newVariantOption === 2
-            ? fullProductData.etiqueta_2
-            : fullProductData.etiqueta_3;
-
-      const baseId = oldId.toString().split("-")[0];
-      const newId = `${baseId}-${newVariantOption}`;
-
-      const existingItemIndex = prevCart.findIndex((item) => item.id === oldId);
-      if (existingItemIndex === -1) return prevCart;
-
-      const itemToUpdate = prevCart[existingItemIndex];
-      const targetItemIndex = prevCart.findIndex((item) => item.id === newId);
-
-      let newCart = [...prevCart];
-
-      if (targetItemIndex !== -1 && targetItemIndex !== existingItemIndex) {
-        newCart[targetItemIndex].quantity += itemToUpdate.quantity;
-        newCart = newCart.filter((item) => item.id !== oldId);
-      } else {
-        const baseName = itemToUpdate.nombre.split("(")[0].trim();
-
-        newCart[existingItemIndex] = {
-          ...itemToUpdate,
-          id: newId,
-          nombre: `${baseName} (${newTag})`,
-          precio: newPrice,
-          varianteSeleccionada: newVariantOption,
-        };
-      }
-      return newCart;
-    });
-  };
-
-  // 8. Cálculos totales
+  // Cálculos totales
   const totalItems = cart.reduce((total, item) => total + item.quantity, 0);
   const totalPrice = cart.reduce(
     (total, item) => total + item.precio * item.quantity,
@@ -163,10 +168,9 @@ export function CartProvider({ children }) {
         removeFromCart,
         updateQuantity,
         clearCart,
-        changeItemVariant,
         totalItems,
         totalPrice,
-        mostrarPrecios, // 🟢 4. Exponemos la variable a toda la app
+        mostrarPrecios,
       }}
     >
       {children}

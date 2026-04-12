@@ -15,8 +15,10 @@ const STATIC_PRODUCTS = [
     categoria: "Bombas",
     precio: 1450,
     etiqueta_1: "1 Pieza",
+    min_1: 1, // 🟢 agregado
     precio_2: 1300,
     etiqueta_2: "Caja 10 Pzas",
+    min_2: 10, // 🟢 agregado
     imagen:
       "https://lh3.googleusercontent.com/aida-public/AB6AXuAVU3WncA2w4r3SH7RtbDoaoAn9Q-79gCiEg5v_C7uM7PlUWiwKTf-pONYEVvvn9dR9s4ROLaLiiEHbbhsS7ad-XiKPNrNhLrvJwwVqyDVDEuV26u2FClcKMCJkmWsE7qBqffLiNXdm-1KRUX4TxGdilxmJ6c8xXv9kqFo5DQqWjQauim7betgRGQGyGno5ZPXKWWJBYsglfPz97WGigzOzTBYyRs7d0Q_M_lLxsy_jS3s1dL_WWSgVylnz5eClm7HWYpAFXtnR7Ple",
     stock: 20,
@@ -27,10 +29,13 @@ const STATIC_PRODUCTS = [
     categoria: "Carretes",
     precio: 2100,
     etiqueta_1: "Individual",
+    min_1: 1, // 🟢 agregado
     precio_2: 1950,
     etiqueta_2: "Mayoreo (5+)",
+    min_2: 5, // 🟢 agregado
     precio_3: 1800,
     etiqueta_3: "Distribuidor",
+    min_3: 20, // 🟢 agregado
     imagen:
       "https://lh3.googleusercontent.com/aida-public/AB6AXuAM7P0TdPNW9jgTur9NmrITscnf1oiPFReVMppUjQEnu9pGPbEy59rcnEd0u-1SFnT-KHyYkJdS5iEbyprwlukBR4_URg2i8bGIUIANPCdPC4L9MU9dbQUlCa6Or5jig4cIakdA_0QG551Z9ypbT_jLQ2H0_VRUXVwLgGGi8aLco7EEfc0Ab_rBlmU58s34QuBwdlWx34BbpbBWrdkycUHo_-VXJJ09qeBAfzbn2TZqaWGgJRBFQiH1hMnUK75X3U8p1ie5iu_pYZoc",
     stock: 15,
@@ -100,6 +105,8 @@ export default async function Home() {
         etiqueta_3: p.etiqueta_3,
         precio_3: p.precio_3,
         stock: p.stock,
+        min_2: p.min_2,
+        min_3: p.min_3,
       };
     }) || [];
 

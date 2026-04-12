@@ -18,14 +18,12 @@ export default function CartDrawer() {
     setIsCartOpen,
     removeFromCart,
     updateQuantity,
-    changeItemVariant,
     totalPrice,
-    mostrarPrecios, // 🟢 1. EXTRAEMOS LA VARIABLE DEL CONTEXTO
+    mostrarPrecios, // 🟢 changeItemVariant ha sido eliminado de aquí
   } = useCart();
 
   if (!isCartOpen) return null;
 
-  // 🟢 2. CONDICIONAMOS EL MENSAJE DE WHATSAPP
   const getWhatsAppMessage = () => {
     let message =
       "¡Hola, equipo de WOOX! Me gustaría cotizar los siguientes productos:\n\n";
@@ -43,6 +41,15 @@ export default function CartDrawer() {
       message += `\n*(Solicitud de cotización)*`;
     }
     return encodeURIComponent(message);
+  };
+
+  // 🟢 Función para manejar el input tipeado manualmente
+  const handleInputChange = (e, itemId) => {
+    const val = parseInt(e.target.value);
+    // Solo actualiza si es un número válido y mayor a 0
+    if (!isNaN(val) && val > 0) {
+      updateQuantity(itemId, val);
+    }
   };
 
   return (
@@ -83,103 +90,90 @@ export default function CartDrawer() {
             </div>
           ) : (
             <ul className="space-y-4">
-              {cart.map((item) => {
-                const itemVariantes = [
-                  { id: 1, etiqueta: item.etiqueta_1 || "1 Pieza" },
-                ];
-                if (item.precio_2)
-                  itemVariantes.push({ id: 2, etiqueta: item.etiqueta_2 });
-                if (item.precio_3)
-                  itemVariantes.push({ id: 3, etiqueta: item.etiqueta_3 });
+              {cart.map((item) => (
+                <li
+                  key={item.id}
+                  className="p-4 bg-white border border-[#bec9c2]/30 rounded-xl shadow-sm flex gap-4 transition-all hover:shadow-md hover:border-[#bec9c2]/60"
+                >
+                  <div className="w-20 h-20 bg-[#f2f3ff] rounded-lg p-2 shrink-0 border border-[#bec9c2]/20">
+                    <img
+                      src={item.imagen_url || "https://via.placeholder.com/150"}
+                      alt={item.nombre}
+                      className="w-full h-full object-contain"
+                    />
+                  </div>
 
-                return (
-                  <li
-                    key={item.id}
-                    className="p-4 bg-white border border-[#bec9c2]/30 rounded-xl shadow-sm flex gap-4 transition-all hover:shadow-md hover:border-[#bec9c2]/60"
-                  >
-                    <div className="w-20 h-20 bg-[#f2f3ff] rounded-lg p-2 shrink-0 border border-[#bec9c2]/20">
-                      <img
-                        src={
-                          item.imagen_url || "https://via.placeholder.com/150"
-                        }
-                        alt={item.nombre}
-                        className="w-full h-full object-contain"
-                      />
-                    </div>
-
-                    <div className="flex-1 flex flex-col justify-between min-w-0">
-                      <div>
-                        <div className="flex justify-between items-start gap-2">
-                          <h4 className="font-bold text-[#131b2e] text-sm leading-tight truncate">
-                            {item.nombre.split("(")[0].trim()}
-                          </h4>
-                          <button
-                            onClick={() => removeFromCart(item.id)}
-                            className="text-[#bec9c2] hover:text-red-500 transition-colors p-1"
-                          >
-                            <Trash2 size={16} />
-                          </button>
-                        </div>
-                        {/* 🟢 3. CONDICIONAMOS EL PRECIO INDIVIDUAL */}
-                        {mostrarPrecios && (
-                          <p className="text-[#004532] font-black mt-1">
-                            ${Number(item.precio).toLocaleString()}
-                          </p>
-                        )}
-                      </div>
-
-                      <div className="flex flex-col gap-2 mt-3">
-                        <select
-                          value={item.varianteSeleccionada || 1}
-                          onChange={(e) =>
-                            changeItemVariant(
-                              item.id,
-                              Number(e.target.value),
-                              item,
-                            )
-                          }
-                          className="w-full bg-[#f8faf9] border border-[#bec9c2]/40 text-[10px] font-bold text-[#3f4944] uppercase tracking-wider rounded-md p-1.5 focus:outline-none focus:ring-1 focus:ring-[#004532] cursor-pointer"
+                  <div className="flex-1 flex flex-col justify-between min-w-0">
+                    <div>
+                      <div className="flex justify-between items-start gap-2">
+                        <h4 className="font-bold text-[#131b2e] text-sm leading-tight truncate">
+                          {item.nombre.split("(")[0].trim()}
+                        </h4>
+                        <button
+                          onClick={() => removeFromCart(item.id)}
+                          className="text-[#bec9c2] hover:text-red-500 transition-colors p-1"
                         >
-                          {itemVariantes.map((v) => (
-                            <option key={v.id} value={v.id}>
-                              {v.etiqueta}
-                            </option>
-                          ))}
-                        </select>
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
 
-                        <div className="flex items-center gap-3 bg-[#f2f3ff] w-max rounded-lg p-1 border border-[#bec9c2]/20">
-                          <button
-                            onClick={() =>
-                              updateQuantity(item.id, item.quantity - 1)
-                            }
-                            className="p-1 hover:bg-white hover:text-[#004532] rounded text-[#3f4944] transition-colors shadow-sm"
-                          >
-                            <Minus size={14} strokeWidth={2.5} />
-                          </button>
-                          <span className="w-6 text-center text-xs font-black text-[#131b2e]">
-                            {item.quantity}
+                      {/* 🟢 Mostramos la etiqueta del mayoreo aplicado */}
+                      {item.etiquetaActual && (
+                        <span className="text-[9px] text-[#004532] font-bold bg-[#004532]/10 px-2 py-0.5 rounded-full mt-1.5 w-max block uppercase tracking-wider">
+                          Nivel: {item.etiquetaActual}
+                        </span>
+                      )}
+
+                      {mostrarPrecios && (
+                        <p className="text-[#004532] font-black mt-1">
+                          ${Number(item.precio).toLocaleString()}{" "}
+                          <span className="text-[10px] font-normal opacity-70">
+                            c/u
                           </span>
-                          <button
-                            onClick={() =>
-                              updateQuantity(item.id, item.quantity + 1)
-                            }
-                            className="p-1 hover:bg-white hover:text-[#004532] rounded text-[#3f4944] transition-colors shadow-sm"
-                          >
-                            <Plus size={14} strokeWidth={2.5} />
-                          </button>
-                        </div>
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="flex flex-col gap-2 mt-3">
+                      {/* 🟢 Se eliminó el select. Ahora tenemos los controles de cantidad con INPUT */}
+                      <div className="flex items-center gap-2 bg-[#f2f3ff] w-max rounded-lg p-1 border border-[#bec9c2]/20">
+                        <button
+                          onClick={() =>
+                            updateQuantity(item.id, item.quantity - 1)
+                          }
+                          className="p-1 hover:bg-white hover:text-[#004532] rounded text-[#3f4944] transition-colors shadow-sm"
+                        >
+                          <Minus size={14} strokeWidth={2.5} />
+                        </button>
+
+                        <input
+                          type="number"
+                          min="1"
+                          value={item.quantity}
+                          onChange={(e) => handleInputChange(e, item.id)}
+                          // 🟢 Estas clases quitan las flechas del navegador para inputs numéricos y lo hacen ver como texto limpio
+                          className="w-12 text-center text-xs font-black text-[#131b2e] bg-transparent border-none p-0 focus:outline-none focus:ring-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        />
+
+                        <button
+                          onClick={() =>
+                            updateQuantity(item.id, item.quantity + 1)
+                          }
+                          className="p-1 hover:bg-white hover:text-[#004532] rounded text-[#3f4944] transition-colors shadow-sm"
+                        >
+                          <Plus size={14} strokeWidth={2.5} />
+                        </button>
                       </div>
                     </div>
-                  </li>
-                );
-              })}
+                  </div>
+                </li>
+              ))}
             </ul>
           )}
         </div>
 
         {cart.length > 0 && (
           <div className="p-6 bg-white border-t border-[#bec9c2]/30 shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
-            {/* 🟢 4. CONDICIONAMOS EL TOTAL ESTIMADO */}
             {mostrarPrecios ? (
               <div className="flex justify-between items-end mb-6">
                 <span className="text-xs font-bold text-[#3f4944] uppercase tracking-widest">

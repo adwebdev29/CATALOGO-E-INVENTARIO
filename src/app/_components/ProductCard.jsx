@@ -7,7 +7,6 @@ import { ZoomIn, ShoppingCart, Eye, MessageCircle } from "lucide-react";
 
 export default function ProductCard({ producto, main = true }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  // 🟢 1. EXTRAEMOS mostrarPrecios DEL CONTEXTO
   const { addToCart, mostrarPrecios } = useCart();
   const [opcionSeleccionada, setOpcionSeleccionada] = useState(1);
 
@@ -16,12 +15,13 @@ export default function ProductCard({ producto, main = true }) {
     producto.imagen ||
     "https://placehold.co/400x400/png";
 
-  // CREAMOS EL ARREGLO DE VARIANTES DINÁMICAMENTE
+  // 🟢 1. AGREGAMOS EL CAMPO "MINIMO" AL ARREGLO DE VARIANTES
   const variantes = [
     {
       id: 1,
       etiqueta: producto.etiqueta_1 || "1 Pieza",
       precio: producto.precio,
+      minimo: producto.min_1 || 1,
     },
   ];
   if (producto.precio_2)
@@ -29,32 +29,28 @@ export default function ProductCard({ producto, main = true }) {
       id: 2,
       etiqueta: producto.etiqueta_2,
       precio: producto.precio_2,
+      minimo: producto.min_2, // Leemos el min_2 de tu base de datos
     });
   if (producto.precio_3)
     variantes.push({
       id: 3,
       etiqueta: producto.etiqueta_3,
       precio: producto.precio_3,
+      minimo: producto.min_3, // Leemos el min_3 de tu base de datos
     });
 
-  // OBTENEMOS LA VARIANTE ACTUAL SEGÚN LA SELECCIÓN
   const varianteActual =
     variantes.find((v) => v.id === opcionSeleccionada) || variantes[0];
 
+  // 🟢 2. SIMPLIFICAMOS LA FUNCIÓN DE AGREGAR AL CARRITO
   const handleAgregarCarrito = (e) => {
     e.stopPropagation();
-    const productoParaCarrito = {
-      ...producto,
-      id: `${producto.id}-${varianteActual.id}`,
-      nombre: `${producto.nombre} (${varianteActual.etiqueta})`,
-      precio: varianteActual.precio,
-      varianteSeleccionada: varianteActual.id,
-    };
-    addToCart(productoParaCarrito);
+    // Ya no inventamos un ID nuevo. Solo pasamos el producto y la cantidad inicial
+    const cantidadInicial = varianteActual.minimo || 1;
+    addToCart(producto, cantidadInicial);
   };
 
-  // TRUNCAR DESCRIPCIÓN (Ajusta el número 65 si quieres más o menos letras)
-  const MAX_LENGTH = 60; // 🟢 Reducido ligeramente para ajustar al nuevo tamaño
+  const MAX_LENGTH = 60;
   const descripcionTruncada =
     producto?.descripcion && producto.descripcion.length > MAX_LENGTH
       ? producto.descripcion.substring(0, MAX_LENGTH).trim() + "..."
@@ -65,13 +61,11 @@ export default function ProductCard({ producto, main = true }) {
       <article
         className={
           main
-            ? // 🟢 REDUJIMOS EL ANCHO: De w-[280/320] a w-[240px] md:w-[280px]
-              "w-[240px] md:w-[280px] shrink-0 p-2 sm:p-3 snap-center group flex flex-col bg-white overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-[#bec9c2]/20 rounded-xl max-w-sm"
+            ? "w-[240px] md:w-[280px] shrink-0 p-2 sm:p-3 snap-center group flex flex-col bg-white overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-[#bec9c2]/20 rounded-xl max-w-sm"
             : "h-full group flex flex-col bg-white overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-[#bec9c2]/20 rounded-xl min-w-0"
         }
       >
         <div
-          // 🟢 REDUJIMOS LA ALTURA DE LA IMAGEN: De h-56 a h-48 para que no se vea tan gigante
           className="relative w-full h-36 sm:h-48 overflow-hidden bg-white flex items-center justify-center cursor-pointer border-b border-[#bec9c2]/10"
           onClick={() => setIsModalOpen(true)}
         >
@@ -94,7 +88,6 @@ export default function ProductCard({ producto, main = true }) {
           )}
         </div>
 
-        {/* 🟢 REDUJIMOS LOS PADDINGS INTERNOS (De p-5 a p-4) */}
         <div className="p-3 sm:p-4 flex flex-col flex-1 min-w-0">
           <div className="flex justify-between items-start mb-2 gap-2">
             <div className="flex items-center gap-1.5 overflow-hidden">
@@ -108,7 +101,6 @@ export default function ProductCard({ producto, main = true }) {
               </span>
             </div>
 
-            {/* 🟢 CONDICIONAMOS EL PRECIO PRINCIPAL (Texto un poco más pequeño: text-base en vez de text-lg) */}
             {mostrarPrecios ? (
               <span className="text-sm sm:text-base font-black text-[#131b2e] shrink-0">
                 ${(Number(varianteActual.precio) || 0).toLocaleString()}
@@ -119,14 +111,12 @@ export default function ProductCard({ producto, main = true }) {
           </div>
 
           <h3
-            // 🟢 TEXTO DEL TÍTULO UN POCO MÁS COMPACTO Y MARGEN INFERIOR REDUCIDO
             className="text-sm sm:text-base font-bold tracking-tight text-[#131b2e] mb-2 uppercase line-clamp-2 cursor-pointer hover:text-[#004532] transition-colors break-words max-w-md"
             onClick={() => setIsModalOpen(true)}
           >
             {producto.nombre}
           </h3>
 
-          {/* AQUI SE IMPRIME LA DESCRIPCION RECORTADA */}
           <p className="hidden sm:block text-[#3f4944] text-[11px] sm:text-xs mb-3 leading-relaxed flex-1 line-clamp-2">
             {descripcionTruncada}
           </p>
@@ -140,7 +130,6 @@ export default function ProductCard({ producto, main = true }) {
             >
               {variantes.map((v) => (
                 <option key={v.id} value={v.id}>
-                  {/* 🟢 CONDICIONAMOS EL PRECIO EN EL SELECT */}
                   {v.etiqueta}{" "}
                   {mostrarPrecios
                     ? `- $${(Number(v.precio) || 0).toLocaleString()}`
@@ -151,7 +140,6 @@ export default function ProductCard({ producto, main = true }) {
 
             <button
               onClick={handleAgregarCarrito}
-              // 🟢 PADDINGS DE BOTONES MÁS ESTILIZADOS
               className="w-full py-2 bg-[#004532] text-white font-bold rounded-lg flex items-center justify-center gap-1.5 hover:bg-[#065f46] transition-colors text-[10px] sm:text-[11px] tracking-widest uppercase shadow-sm"
             >
               <ShoppingCart size={14} strokeWidth={2} />
@@ -166,7 +154,6 @@ export default function ProductCard({ producto, main = true }) {
                 <Eye size={12} strokeWidth={2} /> Detalles
               </button>
 
-              {/* 🟢 CONDICIONAMOS EL MENSAJE DE WHATSAPP */}
               <a
                 href={`https://wa.me/525554946246?text=Hola, me interesa: ${encodeURIComponent(
                   producto.nombre,

@@ -6,12 +6,11 @@ import {
   MessageCircle,
   Package,
   ShieldCheck,
-} from "lucide-react"; // 🟢 1. Importamos ShieldCheck
+} from "lucide-react";
 import { useCart } from "@/app/_context/CartContext";
-import Link from "next/link"; // 🟢 2. Importamos Link
+import Link from "next/link";
 
 export default function ProductDetailModal({ producto, isOpen, onClose }) {
-  // 🟢 1. EXTRAEMOS mostrarPrecios DEL CONTEXTO
   const { addToCart, mostrarPrecios } = useCart();
   const [opcionSeleccionada, setOpcionSeleccionada] = useState(1);
   const [isExpanded, setIsExpanded] = useState(false);
@@ -29,7 +28,7 @@ export default function ProductDetailModal({ producto, isOpen, onClose }) {
 
   const cerrarModal = () => {
     setOpcionSeleccionada(1);
-    setIsExpanded(false); // Reseteamos el estado al cerrar
+    setIsExpanded(false);
     onClose();
   };
 
@@ -38,12 +37,13 @@ export default function ProductDetailModal({ producto, isOpen, onClose }) {
   const imageUrl =
     producto.imagen_url || producto.imagen || "https://via.placeholder.com/400";
 
-  // ARREGLO DE VARIANTES DINÁMICO
+  // 🟢 1. AGREGAMOS EL CAMPO "MINIMO" AL ARREGLO DE VARIANTES
   const variantes = [
     {
       id: 1,
       etiqueta: producto.etiqueta_1 || "1 Pieza",
       precio: producto.precio,
+      minimo: producto.min_1 || 1,
     },
   ];
   if (producto.precio_2)
@@ -51,39 +51,34 @@ export default function ProductDetailModal({ producto, isOpen, onClose }) {
       id: 2,
       etiqueta: producto.etiqueta_2,
       precio: producto.precio_2,
+      minimo: producto.min_2,
     });
   if (producto.precio_3)
     variantes.push({
       id: 3,
       etiqueta: producto.etiqueta_3,
       precio: producto.precio_3,
+      minimo: producto.min_3,
     });
 
   const varianteActual =
     variantes.find((v) => v.id === opcionSeleccionada) || variantes[0];
 
+  // 🟢 2. SIMPLIFICAMOS LA FUNCIÓN (Ya no se inventa un ID nuevo)
   const handleAddToCart = () => {
-    const productoParaCarrito = {
-      ...producto,
-      id: `${producto.id}-${varianteActual.id}`,
-      nombre: `${producto.nombre} (${varianteActual.etiqueta})`,
-      precio: varianteActual.precio,
-      varianteSeleccionada: varianteActual.id,
-    };
-    addToCart(productoParaCarrito);
+    const cantidadInicial = varianteActual.minimo || 1;
+    addToCart(producto, cantidadInicial);
     cerrarModal();
   };
 
-  // 🟢 2. CONDICIONAMOS EL PRECIO EN EL MENSAJE DE WHATSAPP
   const waMessage = encodeURIComponent(
     `¡Hola WOOX! Me interesa adquirir: ${producto.nombre} en presentación de ${varianteActual.etiqueta}${mostrarPrecios ? ` por $${Number(varianteActual.precio).toLocaleString()}` : ""}`,
   );
 
-  // LÓGICA PARA TRUNCAR LA DESCRIPCIÓN
   const MAX_DESC_LENGTH = 120;
   const descripcionCompleta =
     producto.descripcion ||
-    "Accesorios de alta precisión y rendimiento garantizado."; // Actualicé el texto genérico para que encaje con electrónica
+    "Accesorios de alta precisión y rendimiento garantizado.";
 
   const isLongDesc = descripcionCompleta.length > MAX_DESC_LENGTH;
   const descripcionMostrar =
@@ -127,7 +122,6 @@ export default function ProductDetailModal({ producto, isOpen, onClose }) {
             {producto.nombre}
           </h2>
 
-          {/* 🟢 3. CONDICIONAMOS EL PRECIO PRINCIPAL */}
           {mostrarPrecios ? (
             <p className="text-3xl font-black text-[#004532] mb-2">
               ${(Number(varianteActual.precio) || 0).toLocaleString()}
@@ -138,7 +132,6 @@ export default function ProductDetailModal({ producto, isOpen, onClose }) {
             </p>
           )}
 
-          {/* 🟢 ENLACE DE GARANTÍA DEBAJO DEL PRECIO */}
           <Link
             href="/garantia"
             onClick={cerrarModal}
@@ -149,7 +142,6 @@ export default function ProductDetailModal({ producto, isOpen, onClose }) {
             Garantía de 30 días
           </Link>
 
-          {/* DESCRIPCIÓN CON BOTÓN DE VER MÁS/MENOS */}
           <div className="mb-8">
             <p className="text-sm text-[#3f4944] leading-relaxed inline">
               {descripcionMostrar}
@@ -167,7 +159,6 @@ export default function ProductDetailModal({ producto, isOpen, onClose }) {
             )}
           </div>
 
-          {/* SIEMPRE SE RENDERIZA EL SELECT */}
           <div className="mb-8">
             <h4 className="text-[10px] font-black uppercase tracking-widest text-[#3f4944] mb-3 flex items-center gap-2">
               <Package size={14} className="text-[#004532]" /> Selecciona la
@@ -184,7 +175,6 @@ export default function ProductDetailModal({ producto, isOpen, onClose }) {
             >
               {variantes.map((v) => (
                 <option key={v.id} value={v.id}>
-                  {/* 🟢 4. CONDICIONAMOS EL PRECIO EN LAS OPCIONES */}
                   {v.etiqueta}{" "}
                   {mostrarPrecios
                     ? `- $${(Number(v.precio) || 0).toLocaleString()}`
@@ -207,7 +197,6 @@ export default function ProductDetailModal({ producto, isOpen, onClose }) {
               rel="noopener noreferrer"
               className="flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#1ebd5a] text-white py-4 px-6 rounded-xl font-bold text-xs uppercase tracking-widest transition-all shadow-md"
             >
-              {/* 🟢 5. CAMBIAMOS EL TEXTO DEL BOTÓN SEGÚN LA VISIBILIDAD */}
               <MessageCircle size={18} />{" "}
               {mostrarPrecios ? "Comprar Ya" : "Cotizar Ya"}
             </a>
