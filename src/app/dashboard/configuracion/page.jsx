@@ -17,18 +17,25 @@ import {
   User,
   Eye,
   EyeOff,
+  Tag, // 🟢 Nuevo icono para marcas
 } from "lucide-react";
 
 export default function ConfiguracionPage() {
+  // ESTADOS PARA CATEGORÍAS
   const [categorias, setCategorias] = useState([]);
   const [nuevaCategoria, setNuevaCategoria] = useState("");
   const [isPopularNueva, setIsPopularNueva] = useState(false);
   const [loadingIds, setLoadingIds] = useState([]);
-  const [isBackupLoading, setIsBackupLoading] = useState(false);
-
   const [showCategorias, setShowCategorias] = useState(false);
 
-  // 🟢 ESTADO PARA VISIBILIDAD DE PRECIOS
+  // 🟢 ESTADOS PARA MARCAS
+  const [marcas, setMarcas] = useState([]);
+  const [nuevaMarca, setNuevaMarca] = useState("");
+  const [showMarcas, setShowMarcas] = useState(false);
+
+  const [isBackupLoading, setIsBackupLoading] = useState(false);
+
+  // ESTADO PARA VISIBILIDAD DE PRECIOS
   const [mostrarPrecios, setMostrarPrecios] = useState(true);
   const [isToggleLoading, setIsToggleLoading] = useState(false);
 
@@ -37,14 +44,13 @@ export default function ConfiguracionPage() {
   const [currentName, setCurrentName] = useState("");
   const [isNameLoading, setIsNameLoading] = useState(false);
 
-  // 🟢 ESTADOS PARA CONTRASEÑAS (INCLUYENDO VISIBILIDAD)
+  // ESTADOS PARA CONTRASEÑAS
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isPasswordLoading, setIsPasswordLoading] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  // 🟢 TRAER CONFIGURACIÓN DE PRECIOS
   const fetchConfiguracion = useCallback(async () => {
     const { data, error } = await supabase
       .from("configuracion_app")
@@ -57,7 +63,6 @@ export default function ConfiguracionPage() {
     }
   }, []);
 
-  // TRAER DATOS DEL USUARIO ACTUAL
   const fetchMiPerfil = useCallback(async () => {
     const {
       data: { user },
@@ -85,12 +90,23 @@ export default function ConfiguracionPage() {
     if (!error) setCategorias(data || []);
   }, []);
 
+  // 🟢 NUEVO: Traer marcas
+  const fetchMarcas = useCallback(async () => {
+    const { data, error } = await supabase
+      .from("marcas")
+      .select("*")
+      .order("nombre", { ascending: true });
+    if (!error) setMarcas(data || []);
+  }, []);
+
   useEffect(() => {
     fetchCategorias();
+    fetchMarcas(); // 🟢 Cargamos marcas al iniciar
     fetchMiPerfil();
-    fetchConfiguracion(); // 🟢 Cargamos la configuración al iniciar
-  }, [fetchCategorias, fetchMiPerfil, fetchConfiguracion]);
+    fetchConfiguracion();
+  }, [fetchCategorias, fetchMarcas, fetchMiPerfil, fetchConfiguracion]);
 
+  // --- LÓGICA CATEGORÍAS ---
   const handleAgregarCategoria = async (e) => {
     e.preventDefault();
     const nombreLimpio = nuevaCategoria.trim();
@@ -172,6 +188,61 @@ export default function ConfiguracionPage() {
     }
   };
 
+  // --- 🟢 LÓGICA MARCAS ---
+  const handleAgregarMarca = async (e) => {
+    e.preventDefault();
+    const nombreLimpio = nuevaMarca.trim();
+    if (!nombreLimpio) return;
+
+    try {
+      // 🟢 Asumimos que la tabla "marcas" solo requiere el campo "nombre"
+      const { data, error } = await supabase
+        .from("marcas")
+        .insert([{ nombre: nombreLimpio }])
+        .select();
+
+      if (error) {
+        if (error.code === "23505") throw new Error("Esta marca ya existe.");
+        throw error;
+      }
+      if (!data || data.length === 0)
+        throw new Error("Bloqueado por Supabase RLS.");
+
+      setNuevaMarca("");
+      await fetchMarcas();
+      setShowMarcas(true);
+    } catch (error) {
+      Swal.fire({
+        title: "Ups, algo salió mal",
+        text: error.message,
+        icon: "error",
+        confirmButtonColor: "#d33",
+      });
+    }
+  };
+
+  const handleEliminarMarca = async (id) => {
+    if (
+      !window.confirm(
+        "¿Seguro que deseas eliminar esta marca? Los productos asociados podrían dejar de mostrarla.",
+      )
+    )
+      return;
+    try {
+      const { error } = await supabase.from("marcas").delete().eq("id", id);
+      if (error) throw error;
+      await fetchMarcas();
+    } catch (error) {
+      Swal.fire({
+        title: "Error al eliminar:",
+        text: error.message,
+        icon: "error",
+        confirmButtonColor: "#d33",
+      });
+    }
+  };
+  // --- FIN LÓGICA MARCAS ---
+
   const handleDescargarRespaldo = async () => {
     setIsBackupLoading(true);
     try {
@@ -199,7 +270,6 @@ export default function ConfiguracionPage() {
     }
   };
 
-  // 🟢 NUEVA FUNCIÓN: Cambiar Visibilidad de Precios
   const handleTogglePrecios = async () => {
     setIsToggleLoading(true);
     try {
@@ -232,7 +302,6 @@ export default function ConfiguracionPage() {
     }
   };
 
-  // NUEVA FUNCIÓN: Actualizar Nombre
   const handleChangeName = async (e) => {
     e.preventDefault();
     if (!currentName.trim() || !currentUserId) return;
@@ -321,8 +390,10 @@ export default function ConfiguracionPage() {
 
   return (
     <div className="max-w-5xl mx-auto space-y-8">
+      {/* ======================================================= */}
+      {/* ── BLOQUE DE CATEGORÍAS ── */}
+      {/* ======================================================= */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* ── FORMULARIO DE CATEGORÍAS ── */}
         <div className="lg:col-span-5 bg-white p-6 rounded-2xl shadow-sm border border-[#bec9c2]/30 h-fit">
           <h2 className="text-xl font-black mb-5 text-[#131b2e] border-b border-[#bec9c2]/20 pb-3 flex items-center gap-2">
             <LayoutGrid size={24} className="text-[#004532]" />
@@ -379,7 +450,6 @@ export default function ConfiguracionPage() {
           </form>
         </div>
 
-        {/* ── LISTADO DE CATEGORÍAS ── */}
         <div className="lg:col-span-7 bg-white p-6 rounded-2xl shadow-sm border border-[#bec9c2]/30 h-fit">
           <div className="flex justify-between items-end mb-4 border-b border-[#bec9c2]/20 pb-3">
             <h3 className="text-xl font-black text-[#131b2e]">
@@ -495,7 +565,122 @@ export default function ConfiguracionPage() {
         </div>
       </div>
 
+      {/* ======================================================= */}
+      {/* ── 🟢 BLOQUE DE MARCAS ── */}
+      {/* ======================================================= */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        {/* ── FORMULARIO DE MARCAS ── */}
+        <div className="lg:col-span-5 bg-white p-6 rounded-2xl shadow-sm border border-[#bec9c2]/30 h-fit">
+          <h2 className="text-xl font-black mb-5 text-[#131b2e] border-b border-[#bec9c2]/20 pb-3 flex items-center gap-2">
+            <Tag size={24} className="text-[#004532]" />
+            Nueva Marca
+          </h2>
+
+          <form
+            onSubmit={handleAgregarMarca}
+            className="flex flex-col gap-6 text-sm"
+          >
+            <div className="flex flex-col gap-2">
+              <label
+                htmlFor="marca_nombre"
+                className="font-bold text-[#3f4944] text-[10px] uppercase tracking-widest"
+              >
+                Nombre de la marca
+              </label>
+              <input
+                id="marca_nombre"
+                type="text"
+                placeholder="Ej. WOOX, Truper, Bosch..."
+                value={nuevaMarca}
+                onChange={(e) => setNuevaMarca(e.target.value)}
+                className="w-full bg-[#f2f3ff] border border-[#bec9c2]/30 p-3 rounded-lg focus:ring-2 focus:ring-[#004532] focus:outline-none transition-all"
+                required
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={!nuevaMarca.trim()}
+              className="bg-[#131b2e] text-white font-bold py-3.5 rounded-lg hover:bg-[#004532] transition-colors shadow-md flex items-center justify-center gap-2 uppercase tracking-widest text-xs disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <PlusCircle size={16} />
+              Agregar Marca
+            </button>
+          </form>
+        </div>
+
+        {/* ── LISTADO DE MARCAS ── */}
+        <div className="lg:col-span-7 bg-white p-6 rounded-2xl shadow-sm border border-[#bec9c2]/30 h-fit">
+          <div className="flex justify-between items-end mb-4 border-b border-[#bec9c2]/20 pb-3">
+            <h3 className="text-xl font-black text-[#131b2e]">
+              Gestión de Marcas
+            </h3>
+            <span className="text-xs font-bold text-[#004532] bg-[#e6f4ed] px-3 py-1 rounded-full">
+              {marcas.length} Totales
+            </span>
+          </div>
+
+          <button
+            onClick={() => setShowMarcas(!showMarcas)}
+            className="w-full py-3 mb-2 bg-[#f8faf9] hover:bg-[#f2f3ff] border border-[#bec9c2]/30 text-[#131b2e] font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-2 rounded-lg transition-colors"
+          >
+            {showMarcas ? (
+              <>
+                <ChevronUp size={16} /> Ocultar Lista de Marcas
+              </>
+            ) : (
+              <>
+                <ChevronDown size={16} /> Ver Todas las Marcas ({marcas.length})
+              </>
+            )}
+          </button>
+
+          {showMarcas && (
+            <div className="animate-in slide-in-from-top-2 fade-in duration-300 mt-4">
+              <ul className="divide-y divide-[#bec9c2]/10 max-h-[300px] overflow-y-auto pr-2">
+                {marcas.map((marca) => (
+                  <li
+                    key={marca.id}
+                    className="py-4 flex justify-between items-center group"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="bg-[#f2f3ff] p-2 rounded-full">
+                        <Tag size={16} className="text-[#3f4944]" />
+                      </div>
+                      <span className="font-bold text-[#131b2e] text-sm uppercase tracking-wider block">
+                        {marca.nombre}
+                      </span>
+                    </div>
+
+                    <button
+                      onClick={() => handleEliminarMarca(marca.id)}
+                      className="text-red-400 hover:text-red-600 bg-red-50 hover:bg-red-100 p-2 rounded-lg transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
+                      title="Eliminar Marca"
+                    >
+                      <Trash2 size={18} />
+                    </button>
+                  </li>
+                ))}
+                {marcas.length === 0 && (
+                  <div className="text-center py-8">
+                    <Tag size={40} className="text-slate-200 mx-auto mb-3" />
+                    <p className="text-slate-500 font-bold">
+                      No hay marcas registradas.
+                    </p>
+                    <p className="text-xs text-slate-400 mt-1">
+                      Agrega tu primera marca a la izquierda.
+                    </p>
+                  </div>
+                )}
+              </ul>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* ======================================================= */}
       {/* ── SECCIÓN DE VISIBILIDAD DE PRECIOS ── */}
+      {/* ======================================================= */}
       <div className="bg-white p-6 rounded-2xl shadow-sm border border-[#bec9c2]/30 flex flex-col md:flex-row items-center justify-between gap-6">
         <div className="flex items-start gap-4">
           <div
@@ -536,7 +721,9 @@ export default function ConfiguracionPage() {
         </button>
       </div>
 
+      {/* ======================================================= */}
       {/* ── SECCIÓN DE CAMBIO DE NOMBRE ── */}
+      {/* ======================================================= */}
       <div className="bg-white p-6 rounded-2xl shadow-sm border border-[#bec9c2]/30">
         <h2 className="text-xl font-black mb-5 text-[#131b2e] border-b border-[#bec9c2]/20 pb-3 flex items-center gap-2">
           <User size={24} className="text-[#004532]" />
@@ -570,7 +757,9 @@ export default function ConfiguracionPage() {
         </form>
       </div>
 
+      {/* ======================================================= */}
       {/* ── SECCIÓN DE CAMBIO DE CONTRASEÑA ── */}
+      {/* ======================================================= */}
       <div className="bg-white p-6 rounded-2xl shadow-sm border border-[#bec9c2]/30">
         <h2 className="text-xl font-black mb-5 text-[#131b2e] border-b border-[#bec9c2]/20 pb-3 flex items-center gap-2">
           <KeyRound size={24} className="text-[#004532]" />
@@ -645,7 +834,9 @@ export default function ConfiguracionPage() {
         </form>
       </div>
 
+      {/* ======================================================= */}
       {/* ── SECCIÓN DE RESPALDOS ── */}
+      {/* ======================================================= */}
       <div className="bg-white p-6 rounded-2xl shadow-sm border border-[#bec9c2]/30 flex flex-col md:flex-row items-center justify-between gap-6">
         <div className="flex items-start gap-4">
           <div className="bg-[#e6f4ed] p-3 rounded-full shrink-0">
