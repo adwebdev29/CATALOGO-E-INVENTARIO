@@ -42,12 +42,24 @@ export default function ProductCard({ producto, main = true }) {
   const varianteActual =
     variantes.find((v) => v.id === opcionSeleccionada) || variantes[0];
 
-  // 🟢 2. SIMPLIFICAMOS LA FUNCIÓN DE AGREGAR AL CARRITO
   const handleAgregarCarrito = (e) => {
     e.stopPropagation();
-    // Ya no inventamos un ID nuevo. Solo pasamos el producto y la cantidad inicial
-    const cantidadInicial = varianteActual.minimo || 1;
-    addToCart(producto, cantidadInicial);
+    const esCaja = varianteActual.etiqueta.toLowerCase().includes("caja");
+
+    if (esCaja) {
+      // Si la opción seleccionada es una caja, le armamos las propiedades extra
+      const productoParaCaja = {
+        ...producto,
+        precioCajaAplicado: varianteActual.precio,
+        etiquetaCajaAplicada: varianteActual.etiqueta,
+      };
+      // Pasamos el producto modificado, cantidad inicial de 1 caja, y el flag esCaja = true
+      addToCart(productoParaCaja, 1, true);
+    } else {
+      // Si son piezas, todo sigue normal
+      const cantidadInicial = varianteActual.minimo || 1;
+      addToCart(producto, cantidadInicial, false);
+    }
   };
 
   const MAX_LENGTH = 60;

@@ -401,10 +401,11 @@ export default function ProductFormModal({
                 <input
                   type="number"
                   value={formData.stock}
+                  onWheel={(e) => e.target.blur()} // 🟢 Evita scroll
                   onChange={(e) =>
                     setFormData({ ...formData, stock: e.target.value })
                   }
-                  className="w-full bg-[#f2f3ff] border border-[#bec9c2]/30 p-2.5 rounded-lg outline-none focus:ring-2 focus:ring-[#004532] text-sm"
+                  className="w-full bg-[#f2f3ff] border border-[#bec9c2]/30 p-2.5 rounded-lg outline-none focus:ring-2 focus:ring-[#004532] text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                 />
               </div>
               <label className="flex items-center gap-2 text-xs font-bold text-[#131b2e] uppercase tracking-wider cursor-pointer bg-[#e6f4ed] p-2.5 rounded-lg mt-5">
@@ -464,16 +465,17 @@ export default function ProductFormModal({
                   type="number"
                   required
                   value={formData.precio}
+                  onWheel={(e) => e.target.blur()} // 🟢 Evita scroll
                   onChange={(e) =>
                     setFormData({ ...formData, precio: e.target.value })
                   }
                   placeholder="0.00"
-                  className="w-full bg-slate-50 border border-slate-200 p-2 rounded-md focus:border-[#004532] text-sm font-black text-[#004532]"
+                  className="w-full bg-slate-50 border border-slate-200 p-2 rounded-md focus:border-[#004532] text-sm font-black text-[#004532] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                 />
               </div>
             </div>
 
-            {/* 🟢 Nivel 2: Medio Mayoreo */}
+            {/* Nivel 2: Medio Mayoreo */}
             <div className="bg-white p-4 rounded-lg border border-[#bec9c2]/20 shadow-sm border-l-4 border-l-[#004532]">
               <h4 className="text-xs font-bold text-[#131b2e] mb-3">
                 Nivel 2 (Mayoreo Medio) - Opcional
@@ -502,10 +504,11 @@ export default function ProductFormModal({
                   <input
                     type="number"
                     value={formData.min_2}
+                    onWheel={(e) => e.target.blur()} // 🟢 Evita scroll
                     onChange={(e) =>
                       setFormData({ ...formData, min_2: e.target.value })
                     }
-                    className="w-full bg-slate-50 border border-slate-200 p-2 rounded-md text-sm"
+                    className="w-full bg-slate-50 border border-slate-200 p-2 rounded-md text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   />
                 </div>
                 {formData.tipo_2 === "rango" ? (
@@ -516,10 +519,11 @@ export default function ProductFormModal({
                     <input
                       type="number"
                       value={formData.max_2}
+                      onWheel={(e) => e.target.blur()} // 🟢 Evita scroll
                       onChange={(e) =>
                         setFormData({ ...formData, max_2: e.target.value })
                       }
-                      className="w-full bg-slate-50 border border-slate-200 p-2 rounded-md text-sm"
+                      className="w-full bg-slate-50 border border-slate-200 p-2 rounded-md text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     />
                   </div>
                 ) : (
@@ -533,11 +537,12 @@ export default function ProductFormModal({
                     type="number"
                     step="0.01"
                     value={formData.precio_2}
+                    onWheel={(e) => e.target.blur()} // 🟢 Evita scroll
                     onChange={(e) =>
                       setFormData({ ...formData, precio_2: e.target.value })
                     }
                     placeholder="0.00"
-                    className="w-full bg-emerald-50 border border-emerald-200 p-2 rounded-md text-sm font-bold text-[#004532]"
+                    className="w-full bg-emerald-50 border border-emerald-200 p-2 rounded-md text-sm font-bold text-[#004532] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   />
                 </div>
               </div>
@@ -555,7 +560,7 @@ export default function ProductFormModal({
               )}
             </div>
 
-            {/* 🟢 Nivel 3: Caja / Mayor */}
+            {/* Nivel 3: Caja / Mayor */}
             <div className="bg-white p-4 rounded-lg border border-[#bec9c2]/20 shadow-sm border-l-4 border-l-emerald-400">
               <h4 className="text-xs font-bold text-[#131b2e] mb-3">
                 Nivel 3 (Mayorista / Caja) - Opcional
@@ -584,10 +589,11 @@ export default function ProductFormModal({
                   <input
                     type="number"
                     value={formData.min_3}
+                    onWheel={(e) => e.target.blur()} // 🟢 Evita scroll
                     onChange={(e) =>
                       setFormData({ ...formData, min_3: e.target.value })
                     }
-                    className="w-full bg-slate-50 border border-slate-200 p-2 rounded-md text-sm"
+                    className="w-full bg-slate-50 border border-slate-200 p-2 rounded-md text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   />
                 </div>
                 {formData.tipo_3 === "rango" ? (
@@ -598,10 +604,11 @@ export default function ProductFormModal({
                     <input
                       type="number"
                       value={formData.max_3}
+                      onWheel={(e) => e.target.blur()} // 🟢 Evita scroll
                       onChange={(e) =>
                         setFormData({ ...formData, max_3: e.target.value })
                       }
-                      className="w-full bg-slate-50 border border-slate-200 p-2 rounded-md text-sm"
+                      className="w-full bg-slate-50 border border-slate-200 p-2 rounded-md text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     />
                   </div>
                 ) : (
@@ -615,11 +622,12 @@ export default function ProductFormModal({
                     type="number"
                     step="0.01"
                     value={formData.precio_3}
+                    onWheel={(e) => e.target.blur()} // 🟢 Evita scroll
                     onChange={(e) =>
                       setFormData({ ...formData, precio_3: e.target.value })
                     }
                     placeholder="0.00"
-                    className="w-full bg-emerald-50 border border-emerald-200 p-2 rounded-md text-sm font-bold text-[#004532]"
+                    className="w-full bg-emerald-50 border border-emerald-200 p-2 rounded-md text-sm font-bold text-[#004532] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   />
                 </div>
               </div>

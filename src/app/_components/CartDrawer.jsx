@@ -19,7 +19,7 @@ export default function CartDrawer() {
     removeFromCart,
     updateQuantity,
     totalPrice,
-    mostrarPrecios, // 🟢 changeItemVariant ha sido eliminado de aquí
+    mostrarPrecios,
   } = useCart();
 
   if (!isCartOpen) return null;
@@ -28,10 +28,15 @@ export default function CartDrawer() {
     let message =
       "¡Hola, equipo de WOOX! Me gustaría cotizar los siguientes productos:\n\n";
     cart.forEach((item) => {
+      // 🟢 Mostramos el nombre con la etiqueta para que WOOX sepa si le pidieron cajas o piezas
+      const nombreItem = item.etiquetaActual
+        ? `${item.nombre} (${item.etiquetaActual})`
+        : item.nombre;
+
       if (mostrarPrecios) {
-        message += `• ${item.nombre}\n  Cant: ${item.quantity} x $${Number(item.precio).toLocaleString()} = $${(item.precio * item.quantity).toLocaleString()}\n`;
+        message += `• ${nombreItem}\n  Cant: ${item.quantity} x $${Number(item.precio).toLocaleString()} = $${(item.precio * item.quantity).toLocaleString()}\n`;
       } else {
-        message += `• ${item.nombre}\n  Cant: ${item.quantity}\n`;
+        message += `• ${nombreItem}\n  Cant: ${item.quantity}\n`;
       }
     });
 
@@ -43,12 +48,12 @@ export default function CartDrawer() {
     return encodeURIComponent(message);
   };
 
-  // 🟢 Función para manejar el input tipeado manualmente
-  const handleInputChange = (e, itemId) => {
+  // 🟢 Función para manejar el input tipeado manualmente (ahora usa cartItemId)
+  const handleInputChange = (e, cartItemId) => {
     const val = parseInt(e.target.value);
     // Solo actualiza si es un número válido y mayor a 0
     if (!isNaN(val) && val > 0) {
-      updateQuantity(itemId, val);
+      updateQuantity(cartItemId, val);
     }
   };
 
@@ -92,7 +97,8 @@ export default function CartDrawer() {
             <ul className="space-y-4">
               {cart.map((item) => (
                 <li
-                  key={item.id}
+                  // 🟢 Usamos cartItemId como key
+                  key={item.cartItemId}
                   className="p-4 bg-white border border-[#bec9c2]/30 rounded-xl shadow-sm flex gap-4 transition-all hover:shadow-md hover:border-[#bec9c2]/60"
                 >
                   <div className="w-20 h-20 bg-[#f2f3ff] rounded-lg p-2 shrink-0 border border-[#bec9c2]/20">
@@ -110,14 +116,14 @@ export default function CartDrawer() {
                           {item.nombre.split("(")[0].trim()}
                         </h4>
                         <button
-                          onClick={() => removeFromCart(item.id)}
+                          // 🟢 Eliminamos usando cartItemId
+                          onClick={() => removeFromCart(item.cartItemId)}
                           className="text-[#bec9c2] hover:text-red-500 transition-colors p-1"
                         >
                           <Trash2 size={16} />
                         </button>
                       </div>
 
-                      {/* 🟢 Mostramos la etiqueta del mayoreo aplicado */}
                       {item.etiquetaActual && (
                         <span className="text-[9px] text-[#004532] font-bold bg-[#004532]/10 px-2 py-0.5 rounded-full mt-1.5 w-max block uppercase tracking-wider">
                           Nivel: {item.etiquetaActual}
@@ -135,11 +141,11 @@ export default function CartDrawer() {
                     </div>
 
                     <div className="flex flex-col gap-2 mt-3">
-                      {/* 🟢 Se eliminó el select. Ahora tenemos los controles de cantidad con INPUT */}
                       <div className="flex items-center gap-2 bg-[#f2f3ff] w-max rounded-lg p-1 border border-[#bec9c2]/20">
                         <button
+                          // 🟢 Disminuimos usando cartItemId
                           onClick={() =>
-                            updateQuantity(item.id, item.quantity - 1)
+                            updateQuantity(item.cartItemId, item.quantity - 1)
                           }
                           className="p-1 hover:bg-white hover:text-[#004532] rounded text-[#3f4944] transition-colors shadow-sm"
                         >
@@ -150,14 +156,17 @@ export default function CartDrawer() {
                           type="number"
                           min="1"
                           value={item.quantity}
-                          onChange={(e) => handleInputChange(e, item.id)}
-                          // 🟢 Estas clases quitan las flechas del navegador para inputs numéricos y lo hacen ver como texto limpio
+                          // 🟢 Actualizamos input usando cartItemId
+                          onChange={(e) =>
+                            handleInputChange(e, item.cartItemId)
+                          }
                           className="w-12 text-center text-xs font-black text-[#131b2e] bg-transparent border-none p-0 focus:outline-none focus:ring-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                         />
 
                         <button
+                          // 🟢 Aumentamos usando cartItemId
                           onClick={() =>
-                            updateQuantity(item.id, item.quantity + 1)
+                            updateQuantity(item.cartItemId, item.quantity + 1)
                           }
                           className="p-1 hover:bg-white hover:text-[#004532] rounded text-[#3f4944] transition-colors shadow-sm"
                         >

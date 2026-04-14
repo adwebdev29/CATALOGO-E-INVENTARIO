@@ -37,7 +37,7 @@ export default function ProductDetailModal({ producto, isOpen, onClose }) {
   const imageUrl =
     producto.imagen_url || producto.imagen || "https://via.placeholder.com/400";
 
-  // 🟢 1. AGREGAMOS EL CAMPO "MINIMO" AL ARREGLO DE VARIANTES
+  // 🟢 1. ARREGLO DE VARIANTES CON MÍNIMOS
   const variantes = [
     {
       id: 1,
@@ -64,10 +64,25 @@ export default function ProductDetailModal({ producto, isOpen, onClose }) {
   const varianteActual =
     variantes.find((v) => v.id === opcionSeleccionada) || variantes[0];
 
-  // 🟢 2. SIMPLIFICAMOS LA FUNCIÓN (Ya no se inventa un ID nuevo)
+  // 🟢 2. NUEVA LÓGICA: Diferenciar entre Caja y Piezas al agregar
   const handleAddToCart = () => {
-    const cantidadInicial = varianteActual.minimo || 1;
-    addToCart(producto, cantidadInicial);
+    const esCaja = varianteActual.etiqueta.toLowerCase().includes("caja");
+
+    if (esCaja) {
+      // Si la opción seleccionada es una caja, armamos el objeto especial
+      const productoParaCaja = {
+        ...producto,
+        precioCajaAplicado: varianteActual.precio,
+        etiquetaCajaAplicada: varianteActual.etiqueta,
+      };
+      // (producto, cantidad = 1 caja, esCaja = true)
+      addToCart(productoParaCaja, 1, true);
+    } else {
+      // Si son piezas, usamos el mínimo normal
+      const cantidadInicial = varianteActual.minimo || 1;
+      // (producto, cantidad = piezas iniciales, esCaja = false)
+      addToCart(producto, cantidadInicial, false);
+    }
     cerrarModal();
   };
 
