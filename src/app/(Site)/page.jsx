@@ -4,7 +4,7 @@ import MainProducts from "../_components/MainProducts";
 import ScrollReveal from "../_components/ScrollReveal"; // 🟢 Importamos el nuevo componente
 // 🟢 Importamos iconos de Lucide para iterarlos en las categorías dinámicas
 import { ArrowRight, Headphones, Laptop, Bot, Zap, Box } from "lucide-react";
-
+export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 // Static featured products shown when DB is empty or as fallback UI

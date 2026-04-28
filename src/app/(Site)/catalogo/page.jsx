@@ -4,7 +4,7 @@ import CatalogoLayout from "@/app/_components/CatalogoLayout";
 import Link from "next/link";
 import { ArrowLeft, ArrowRight, PackageX } from "lucide-react";
 import ScrollReveal from "@/app/_components/ScrollReveal";
-
+export const dynamic = "force-dynamic";
 export const revalidate = 0;
 const ITEMS_PER_PAGE = 12;
 
