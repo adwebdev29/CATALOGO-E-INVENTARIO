@@ -537,7 +537,7 @@ export default function ConfiguracionPage() {
 
                       <button
                         onClick={() => handleEliminarCategoria(cat.id)}
-                        className="text-red-400 hover:text-red-600 bg-red-50 hover:bg-red-100 p-2 rounded-lg transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
+                        className="text-red-400 hover:text-red-600 bg-red-50 hover:bg-red-100 p-2 rounded-lg transition-colors"
                         title="Eliminar Categoría"
                       >
                         <Trash2 size={18} />
