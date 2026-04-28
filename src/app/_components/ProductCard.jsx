@@ -81,12 +81,10 @@ export default function ProductCard({ producto, main = true }) {
           className="relative w-full h-36 sm:h-48 overflow-hidden bg-white flex items-center justify-center cursor-pointer border-b border-[#bec9c2]/10"
           onClick={() => setIsModalOpen(true)}
         >
-          <Image
+          <img
             src={imageUrl}
             alt={producto.nombre || "Producto WOOX"}
-            fill
-            sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
-            className="object-contain p-3 sm:p-4 group-hover:scale-105 transition-transform duration-500"
+            className="w-full h-full object-contain p-2 sm:p-4 group-hover:scale-105 transition-transform duration-500"
           />
           <div className="absolute inset-0 bg-[#131b2e]/0 group-hover:bg-[#131b2e]/5 transition-colors duration-300 flex items-center justify-center">
             <div className="text-[#131b2e] opacity-0 group-hover:opacity-100 transition-opacity duration-300 drop-shadow-md bg-white/80 rounded-full p-2 flex items-center justify-center">
